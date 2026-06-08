@@ -1,0 +1,12 @@
+db/
+incremental_db/
+output_files/
+*.qws
+*.rpt
+*.smsg
+*.summary
+*.jdi
+*.pin
+*.sld
+*.sof
+*.pof

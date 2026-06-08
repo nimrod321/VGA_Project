@@ -1,0 +1,233 @@
+// Spidey Objects Matrix Bitmap 
+// Replaces HartsMatrixBitMap.sv
+// (c) Technion IIT, Department of Electrical Engineering 2026
+
+module SpideyObjectsBitMap #(
+    parameter int NUM_TOTAL_OBJECTS = 15 // How many items to spawn per level
+)(  
+    input  logic        clk,
+    input  logic        resetN,
+    input  logic [10:0] offsetX,         // offset from top left position of the play area
+    input  logic [10:0] offsetY,
+    input  logic        InsideRectangle, // input that the pixel is within the main play area
+    input  logic        start_level,     // Pulse to generate level
+    input  logic        collision_Web_Object, // Collision input
+	
+    output logic        drawingRequest,  // output that the pixel should be displayed
+    output logic [7:0]  RGBout           // rgb value from the bitmap 
+);
+
+    localparam logic [7:0] TRANSPARENT_ENCODING = 8'hFF;
+
+    // 16x16 Tile Constants
+    localparam int TILE_X_BITS = 4; // 2^4 = 16 pixels wide
+    localparam int TILE_Y_BITS = 4; // 2^4 = 16 pixels high
+
+    // 640 / 16 = 40 columns. 480 / 16 = 30 rows.
+    localparam int MAZE_COLS = 40; 
+    localparam int MAZE_ROWS = 30; 
+
+    // Split the offsets into Tile Index (MSB) and Pixel-in-Tile (LSB)
+    logic [3:0] offsetX_LSB;
+    logic [3:0] offsetY_LSB; 
+    logic [5:0] offsetX_MSB; // 0 to 39
+    logic [4:0] offsetY_MSB; // 0 to 29
+
+    assign offsetX_LSB = offsetX[3:0];
+    assign offsetY_LSB = offsetY[3:0];
+    assign offsetX_MSB = offsetX[9:4]; 
+    assign offsetY_MSB = offsetY[9:4]; 
+
+    // The Grid memory
+    logic [3:0] MazeBitMapMask [0:MAZE_ROWS-1][0:MAZE_COLS-1];  
+
+    // Object Bitmaps Array (1 to 7)
+    logic [1:7][0:15][0:15][7:0] object_colors;
+	 // make input of type objects specific
+    
+   
+
+
+
+
+    always_comb begin
+        object_colors[1] = {
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h33,8'h53,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFA,8'hFA,8'hF6,8'hFA,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hF6,8'h00,8'hFA,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFA,8'hF6,8'hF9,8'hF6,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h06,8'h0A,8'h06,8'h0A,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h06,8'h09,8'h06,8'h05,8'h06,8'h0A,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h06,8'hF8,8'h06,8'h0A,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h06,8'h0A,8'h06,8'h05,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h25,8'h48,8'h25,8'h25,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00}
+}; // Cop 1
+        object_colors[2] = {
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFA,8'hF6,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFA,8'h00,8'hFA,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFA,8'hF6,8'hFA,8'hF6,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'hFF,8'hFF,8'hFF,8'hFF,8'hFF,8'hFF,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'hFF,8'hFF,8'hFF,8'hFF,8'hFF,8'hFF,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h25,8'h48,8'h25,8'h24,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00}
+}; // Robber Stand
+        object_colors[3] = {
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFA,8'hF6,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFA,8'h00,8'hFA,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFA,8'hF6,8'hFA,8'hF6,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFF,8'hFF,8'hFF,8'hFF,8'hFF,8'hFF,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hFF,8'hFF,8'hFF,8'hFF,8'hFF,8'hFF,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h25,8'h48,8'h25,8'h24,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00}
+}; // Robber Run
+        object_colors[4] = {
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'hC0,8'hA0,8'hC0,8'hA0,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'hC0,8'hA0,8'hFA,8'hF6,8'hC0,8'hC0,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'hA0,8'hC0,8'hFA,8'hF6,8'hF9,8'hFA,8'hA0,8'hC0,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'hC0,8'hA0,8'hF6,8'h00,8'hFA,8'h00,8'hC0,8'hA0,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'hC0,8'hA0,8'hFA,8'hF6,8'hA0,8'hC0,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h11,8'h10,8'h11,8'h10,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h11,8'h10,8'h11,8'h14,8'h11,8'h11,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h10,8'h15,8'h10,8'h11,8'h10,8'h11,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h11,8'h11,8'h10,8'h11,8'h15,8'h10,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h0E,8'h0F,8'h0E,8'h0E,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h0E,8'h00,8'h00,8'h00,8'h0F,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h0F,8'h00,8'h00,8'h00,8'h0E,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h0E,8'h00,8'h00,8'h00,8'h0F,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h0F,8'h00,8'h00,8'h00,8'h0E,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h0E,8'h00,8'h00,8'h0E,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00},
+	{8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00,8'h00}
+}; // Maryjane
+        
+        // Fill remaining slots with transparent pixels
+        for (int i=5; i<=7; i++) begin
+            for (int y=0; y<16; y++) begin
+                for (int x=0; x<16; x++) begin
+                    object_colors[i][y][x] = TRANSPARENT_ENCODING;
+                end
+            end
+        end
+    end
+
+
+
+
+
+
+    // -----------------------------------------------------------------------
+    // LFSR (Linear-Feedback Shift Register) & Random Generation Logic
+    // -----------------------------------------------------------------------
+    // Why are we using an LFSR?
+    // This is great for single events, but we need to spawn 15 bad guys *instantly* 
+    // when a level starts. The LFSR generates a pseudo-random number every single 
+    // clock cycle (50 million times a second), giving us the fast randomness we need 
+    
+    logic [15:0] lfsr;
+    logic [7:0]  objects_placed;
+    
+    // Wires to extract raw binary values from the LFSR (No Modulo needed!)
+    // We grab different chunks of the 16-bit register to use as our random X, Y, and Type.
+    logic [5:0] rand_x;    // Values 0 to 63
+    logic [4:0] rand_y;    // Values 0 to 31
+    logic [2:0] rand_type; // Values 0 to 7
+
+    assign rand_x = lfsr[5:0];
+    assign rand_y = lfsr[10:6];
+    assign rand_type = lfsr[13:11];
+
+    typedef enum logic [1:0] {INIT_CLEAR, INIT_SCATTER, PLAY} state_t;
+    state_t state;
+
+    always_ff @(posedge clk or negedge resetN) begin
+        if (!resetN) begin
+            state <= INIT_CLEAR;
+            objects_placed <= 0;
+            lfsr <= 16'hACE1; // Seed MUST be non-zero for LFSR to work
+            RGBout <= TRANSPARENT_ENCODING;
+            drawingRequest <= 1'b0;
+            
+        end else begin
+            // 1. Shift the LFSR every clock cycle for continuous randomness
+            // We XOR specific bits (15, 13, 12, 10) to create maximum randomness
+            lfsr <= {lfsr[14:0], lfsr[15] ^ lfsr[13] ^ lfsr[12] ^ lfsr[10]};
+
+            // 2. VGA Output Logic (Pipeline)
+            RGBout <= TRANSPARENT_ENCODING; 
+            drawingRequest <= 1'b0;
+
+            if (state == PLAY && InsideRectangle) begin
+                // Ensure we don't access out of bounds arrays for the VGA
+                if (offsetX_MSB < MAZE_COLS && offsetY_MSB < MAZE_ROWS) begin
+                    if (MazeBitMapMask[offsetY_MSB][offsetX_MSB] != 4'h0) begin
+                        RGBout <= object_colors[MazeBitMapMask[offsetY_MSB][offsetX_MSB]][offsetY_LSB][offsetX_LSB];
+                    end
+                end
+            end
+            drawingRequest <= (RGBout != TRANSPARENT_ENCODING) ? 1'b1 : 1'b0;
+
+            // 3. Grid Management State Machine
+            case (state)
+                INIT_CLEAR: begin
+                    for (int r = 0; r < MAZE_ROWS; r++) begin
+                        for (int c = 0; c < MAZE_COLS; c++) begin
+                            MazeBitMapMask[r][c] <= 4'h0;
+                        end
+                    end
+                    objects_placed <= 0;
+                    state <= INIT_SCATTER;
+                end
+                INIT_SCATTER: begin
+                    if (objects_placed < NUM_TOTAL_OBJECTS) begin
+                        if (rand_x < MAZE_COLS && rand_y >= 6 && rand_y < MAZE_ROWS && rand_type > 3'd0 && rand_type <= 3'd5) begin
+                            if (MazeBitMapMask[rand_y][rand_x] == 4'h0) begin
+                                MazeBitMapMask[rand_y][rand_x] <= {1'b0, rand_type}; // Store the type
+                                objects_placed <= objects_placed + 1;
+                            end
+                        end
+                        // If it fails the IF check, it simply does nothing this cycle.
+                        // The LFSR will shift next cycle, giving us a completely new random roll!
+                    end else begin
+                        state <= PLAY;
+                    end
+                end
+
+                PLAY: begin
+                    if (start_level) begin
+                        state <= INIT_CLEAR;
+                    end
+                    
+                    if (collision_Web_Object && InsideRectangle) begin
+                        if (offsetX_MSB < MAZE_COLS && offsetY_MSB < MAZE_ROWS) begin
+                            MazeBitMapMask[offsetY_MSB][offsetX_MSB] <= 4'h0; 
+                        end
+                    end
+                end
+            endcase
+        end
+    end
+endmodule
