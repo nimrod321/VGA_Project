@@ -1,0 +1,158 @@
+// Spidey Objects Matrix Bitmap 
+// Replaces HartsMatrixBitMap.sv
+// (c) Technion IIT, Department of Electrical Engineering 2026
+
+module SpideyObjectsBitMap #(
+    parameter int NUM_TOTAL_OBJECTS = 15 // How many items to spawn per level
+)(  
+    input  logic        clk,
+    input  logic        resetN,
+    input  logic [10:0] offsetX,         // offset from top left position of the play area
+    input  logic [10:0] offsetY,
+    input  logic        InsideRectangle, // input that the pixel is within the main play area
+    input  logic        start_level,     // Replaces 'random_hart' -> Pulse to generate level
+    input  logic        collision_Web_Object, // Replaces 'collision_Smiley_Hart'
+
+    output logic        drawingRequest,  // output that the pixel should be displayed
+    output logic [7:0]  RGBout           // rgb value from the bitmap 
+);
+
+    localparam logic [7:0] TRANSPARENT_ENCODING = 8'hFF;
+
+    // 16x16 Tile Constants
+    localparam int TILE_X_BITS = 4; // 2^4 = 16 pixels wide
+    localparam int TILE_Y_BITS = 4; // 2^4 = 16 pixels high
+
+    // 640 / 16 = 40 columns. 480 / 16 = 30 rows.
+    localparam int MAZE_COLS = 40; 
+    localparam int MAZE_ROWS = 30; 
+
+    // Split the offsets into Tile Index (MSB) and Pixel-in-Tile (LSB)
+    logic [3:0] offsetX_LSB;
+    logic [3:0] offsetY_LSB; 
+    logic [5:0] offsetX_MSB; // 0 to 39
+    logic [4:0] offsetY_MSB; // 0 to 29
+
+    assign offsetX_LSB = offsetX[3:0];
+    assign offsetY_LSB = offsetY[3:0];
+    assign offsetX_MSB = offsetX[9:4]; 
+    assign offsetY_MSB = offsetY[9:4]; 
+
+    // The Grid: 4 bits per tile allows up to 15 different object types
+    // 0 = Empty
+    // 1 = Small Crim, 2 = Med Crim, 3 = Buff Crim
+    // 4 = Reg Police, 5 = Fat Police
+    // 6 = Mary Jane,  7 = Riddler Bag
+    logic [3:0] MazeBitMapMask [0:MAZE_ROWS-1][0:MAZE_COLS-1];  
+
+    // -----------------------------------------------------------------------
+    // Object Bitmaps Array (1 to 7)
+    // -----------------------------------------------------------------------
+    // For now, these are solid colored 16x16 blocks so you can test the logic immediately.
+    // Replace the inner loops with your actual pixel-art arrays when ready.
+    logic [1:7][0:15][0:15][7:0] object_colors;
+    
+    always_comb begin
+        for (int t=1; t<=7; t++) begin
+            for (int y=0; y<16; y++) begin
+                for (int x=0; x<16; x++) begin
+                    // Assign a unique color to each of the 7 types for debugging
+                    case(t)
+                        1: object_colors[t][y][x] = 8'hE0; // Red (Small Crim)
+                        2: object_colors[t][y][x] = 8'hFC; // Yellow (Med Crim)
+                        3: object_colors[t][y][x] = 8'h03; // Blue (Buff Crim)
+                        4: object_colors[t][y][x] = 8'h1C; // Green (Reg Police)
+                        5: object_colors[t][y][x] = 8'h13; // Dark Green (Fat Police)
+                        6: object_colors[t][y][x] = 8'hF0; // Pink (Mary Jane)
+                        7: object_colors[t][y][x] = 8'hE3; // Orange (Riddler Bag)
+                        default: object_colors[t][y][x] = TRANSPARENT_ENCODING;
+                    endcase
+                end
+            end
+        end
+    end
+
+    // -----------------------------------------------------------------------
+    // LFSR & Random Generation State Machine
+    // -----------------------------------------------------------------------
+    logic [15:0] lfsr;
+    logic [7:0]  objects_placed;
+    
+    typedef enum logic [1:0] {INIT_CLEAR, INIT_SCATTER, PLAY} state_t;
+    state_t state;
+
+    always_ff @(posedge clk or negedge resetN) begin
+        if (!resetN) begin
+            state <= INIT_CLEAR;
+            objects_placed <= 0;
+            lfsr <= 16'hACE1; // Seed MUST be non-zero
+            RGBout <= TRANSPARENT_ENCODING;
+            drawingRequest <= 1'b0;
+            
+        end else begin
+            // 1. Shift the LFSR every clock cycle for continuous randomness
+            lfsr <= {lfsr[14:0], lfsr[15] ^ lfsr[13] ^ lfsr[12] ^ lfsr[10]};
+
+            // 2. VGA Output Logic (Pipeline)
+            RGBout <= TRANSPARENT_ENCODING; 
+            drawingRequest <= 1'b0;
+
+            if (state == PLAY && InsideRectangle) begin
+                // Ensure we don't access out of bounds
+                if (offsetX_MSB < MAZE_COLS && offsetY_MSB < MAZE_ROWS) begin
+                    if (MazeBitMapMask[offsetY_MSB][offsetX_MSB] != 4'h0) begin
+                        RGBout <= object_colors[MazeBitMapMask[offsetY_MSB][offsetX_MSB]][offsetY_LSB][offsetX_LSB];
+                    end
+                end
+            end
+            drawingRequest <= (RGBout != TRANSPARENT_ENCODING) ? 1'b1 : 1'b0;
+
+            // 3. Grid Management State Machine
+            case (state)
+                INIT_CLEAR: begin
+                    // Wipe the board clean
+                    for (int r = 0; r < MAZE_ROWS; r++) begin
+                        for (int c = 0; c < MAZE_COLS; c++) begin
+                            MazeBitMapMask[r][c] <= 4'h0;
+                        end
+                    end
+                    objects_placed <= 0;
+                    state <= INIT_SCATTER;
+                end
+
+                INIT_SCATTER: begin
+                    if (objects_placed < NUM_TOTAL_OBJECTS) begin
+                        // Pick random X (0 to 39)
+                        int rand_x = lfsr[5:0] % MAZE_COLS;
+                        // Pick random Y (6 to 29). We offset by 6 so they don't spawn at the very top where Spidey is!
+                        int rand_y = (lfsr[11:6] % (MAZE_ROWS - 6)) + 6;
+                        // Pick random type (1 to 7)
+                        logic [3:0] rand_type = (lfsr[14:12] % 7) + 1; 
+
+                        // If the randomly chosen tile is empty, place the object!
+                        if (MazeBitMapMask[rand_y][rand_x] == 4'h0) begin
+                            MazeBitMapMask[rand_y][rand_x] <= rand_type;
+                            objects_placed <= objects_placed + 1;
+                        end
+                    end else begin
+                        state <= PLAY;
+                    end
+                end
+
+                PLAY: begin
+                    // Trigger a new level layout
+                    if (start_level) begin
+                        state <= INIT_CLEAR;
+                    end
+                    
+                    // Collision Handling: Erase the object the web just hit
+                    if (collision_Web_Object && InsideRectangle) begin
+                        if (offsetX_MSB < MAZE_COLS && offsetY_MSB < MAZE_ROWS) begin
+                            MazeBitMapMask[offsetY_MSB][offsetX_MSB] <= 4'h0; 
+                        end
+                    end
+                end
+            endcase
+        end
+    end
+endmodule  

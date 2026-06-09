@@ -15,7 +15,7 @@ module pulled_object (
     
     // Game Logic Triggers
     input  logic        is_hooked,     // 1 when a collision happened
-    input  logic [1:0]  id_code,       // Determines WHICH object is drawn (0 to 3)
+    input  logic [2:0]  id_code,       // Determines WHICH object is drawn (1 to 6)
     input  logic [1:0]  weight,        // Determines SCALE: 1=16x16, 2=32x32, 3=64x64
     
     // Outputs to the VGA Multiplexer
@@ -23,7 +23,11 @@ module pulled_object (
     output logic [7:0]  pulledRGBout,
     
     // Output back to the Hook System to affect pull_speed
-    output logic [1:0]  pulled_weight  
+    output logic [1:0]  pulled_weight,
+    
+    // Output to Score Manager
+    output logic        score_pulse,
+    output logic [2:0]  pulled_id  
 );
 
     localparam logic [7:0] TRANSPARENT_ENCODING = 8'hFF;
@@ -86,8 +90,10 @@ module pulled_object (
     (* ram_init_file = "MIF/robber_stand.mif" *)    	logic [7:0] mem_robber [0:255];
     (* ram_init_file = "MIF/robber_run.mif" *) 			logic [7:0] mem_robber_run [0:255];
     (* ram_init_file = "MIF/maryjane.mif" *) 			logic [7:0] mem_maryjane [0:255];
+    (* ram_init_file = "MIF/riddler.mif" *) 			logic [7:0] mem_riddler [0:255];
+    (* ram_init_file = "MIF/goblin.mif" *) 				logic [7:0] mem_goblin [0:255];
 
-    logic [7:0] color_cop, color_robber, color_robber_run, color_maryjane;
+    logic [7:0] color_cop, color_robber, color_robber_run, color_maryjane, color_riddler, color_goblin;
     logic [7:0] selected_pixel_color;
 
     // Read from all ROMs simultaneously every clock cycle
@@ -96,35 +102,53 @@ module pulled_object (
         color_robber    <= mem_robber[rom_address];
         color_robber_run <= mem_robber_run[rom_address];
         color_maryjane <= mem_maryjane[rom_address];
+        color_riddler <= mem_riddler[rom_address];
+        color_goblin <= mem_goblin[rom_address];
     end
 
     // Multiplexer to choose the correct color wire based on the id_code
     always_comb begin
         case (id_code)
-            2'd0: selected_pixel_color = color_cop;
-            2'd1: selected_pixel_color = color_robber;
-            2'd2: selected_pixel_color = color_robber_run;
-            2'd3: selected_pixel_color = color_maryjane;
+            3'd1: selected_pixel_color = color_cop;
+            3'd2: selected_pixel_color = color_robber;
+            3'd3: selected_pixel_color = color_robber_run;
+            3'd4: selected_pixel_color = color_maryjane;
+            3'd5: selected_pixel_color = color_riddler;
+            3'd6: selected_pixel_color = color_goblin;
             default: selected_pixel_color = TRANSPARENT_ENCODING;
         endcase
     end
 
     // -------------------------------------------------------------------------
-    // 5. Output Pipeline
+    // 5. Output Pipeline & Edge Detection
     // -------------------------------------------------------------------------
+    logic is_hooked_d;
+    
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
             pulledRGBout         <= 8'h00;
             pulledDrawingRequest <= 1'b0;
             pulled_weight  <= 2'd0;
+            is_hooked_d <= 1'b0;
+            score_pulse <= 1'b0;
+            pulled_id <= 3'd0;
         end 
         else begin
-				
+            is_hooked_d <= is_hooked;
+            
             if (is_hooked) begin
                 pulled_weight <= weight; 
+                pulled_id <= id_code; // Latch ID while hooked
             end else begin
                 pulled_weight <= 2'd0; // Empty hook = 0 weight
-				end
+            end
+            
+            // Generate score pulse exactly when hook fully retracts (falling edge)
+            if (is_hooked_d && !is_hooked) begin
+                score_pulse <= 1'b1;
+            end else begin
+                score_pulse <= 1'b0;
+            end
 
             // Handle the VGA Drawing Request
             if (inside_sprite && selected_pixel_color != TRANSPARENT_ENCODING) begin

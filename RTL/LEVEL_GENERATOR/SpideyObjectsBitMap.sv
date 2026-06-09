@@ -11,10 +11,14 @@ module SpideyObjectsBitMap #(
     input  logic [10:0] offsetY,
     input  logic        InsideRectangle, // input that the pixel is within the main play area
     input  logic        start_level,     // Pulse to generate level
+    input  logic        startOfFrame,    // Trigger to update animation/movement
+    input  logic [3:0]  current_level,   // From game_state_controller
     input  logic        collision_Web_Object, // Collision input
 	
     output logic        objectsDrawingRequest,  // output that the pixel should be displayed
-    output logic [7:0]  objectsRGB           	// rgb value from the bitmap 
+    output logic [7:0]  objectsRGB,          	// rgb value from the bitmap 
+    output logic [2:0]  id_code,
+    output logic [1:0]  weight
 );
 
     localparam logic [7:0] TRANSPARENT_ENCODING = 8'hFF;
@@ -26,48 +30,64 @@ module SpideyObjectsBitMap #(
     (* ram_init_file = "MIF/robber_stand.mif" *) 	logic [7:0] mem_rob_stand [0:255];
     (* ram_init_file = "MIF/robber_run.mif" *)   	logic [7:0] mem_rob_run [0:255];
     (* ram_init_file = "MIF/maryjane.mif" *)     	logic [7:0] mem_maryjane [0:255];
+    (* ram_init_file = "MIF/riddler.mif" *)      	logic [7:0] mem_riddler [0:255];
+    (* ram_init_file = "MIF/goblin.mif" *)       	logic [7:0] mem_goblin [0:255];
+    
+    // Level loading memory (16 levels, 16 objects max = 256 addresses)
+    (* ram_init_file = "MIF/levels.mif" *)          logic [7:0] mem_levels [0:255];
     
     // -----------------------------------------------------------------------
-    // Sprite List Arrays for Hardware Scaling
+    // Sprite List Arrays for Hardware Scaling & Movement
     // -----------------------------------------------------------------------
     logic [10:0] obj_x [0:14];
     logic [10:0] obj_y [0:14];
     logic [2:0]  obj_type [0:14];
     logic [1:0]  obj_scale [0:14]; // 0=16x16, 1=32x32, 2=64x64
     logic        obj_active [0:14];
+    logic        obj_dir [0:14];   // 0=right, 1=left
 
     // -----------------------------------------------------------------------
-    // LFSR (Linear-Feedback Shift Register) & Random Generation Logic
+    // LFSR & Random Generation Logic
     // -----------------------------------------------------------------------
     logic [15:0] lfsr;
     logic [7:0]  objects_placed;
     
-    // Wires to extract raw binary values from the LFSR
-    logic [5:0] rand_x;    // Values 0 to 63
-    logic [5:0] rand_y;    // Values 0 to 63
-
+    logic [5:0] rand_x; 
+    logic [5:0] rand_y; 
     assign rand_x = lfsr[5:0];
     assign rand_y = lfsr[11:6];
 
-    typedef enum logic [1:0] {INIT_CLEAR, INIT_SCATTER, PLAY} state_t;
+    // Read level data synchronously
+    logic [7:0] level_data;
+    always_ff @(posedge clk) begin
+        level_data <= mem_levels[{current_level - 4'd1, objects_placed[3:0]}];
+    end
+
+    typedef enum logic [2:0] {INIT_CLEAR, INIT_READ_ROM, INIT_SCATTER, PLAY} state_t;
     state_t state;
 
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
             state <= INIT_CLEAR;
             objects_placed <= 0;
-            lfsr <= 16'hACE1; // Seed MUST be non-zero for LFSR to work
+            lfsr <= 16'hACE1; // Seed MUST be non-zero
             objectsRGB <= TRANSPARENT_ENCODING;
             objectsDrawingRequest <= 1'b0;
-            for (int i=0; i<15; i++) obj_active[i] <= 1'b0;
-            
+            id_code <= 3'd0;
+            weight <= 2'd0;
+            for (int i=0; i<15; i++) begin
+                obj_active[i] <= 1'b0;
+                obj_dir[i] <= 1'b0;
+            end
         end else begin
-            // 1. Shift the LFSR every clock cycle for continuous randomness
+            // 1. Shift the LFSR
             lfsr <= {lfsr[14:0], lfsr[15] ^ lfsr[13] ^ lfsr[12] ^ lfsr[10]};
 
             // 2. VGA Output Logic (Pipeline)
             objectsRGB <= TRANSPARENT_ENCODING; 
             objectsDrawingRequest <= 1'b0;
+            id_code <= 3'd0;
+            weight <= 2'd0;
 
             if (state == PLAY && InsideRectangle) begin
                 logic hit_found;
@@ -76,7 +96,6 @@ module SpideyObjectsBitMap #(
                 hit_index = 0;
                 
                 // Find if we are inside any active object
-                // Loop backwards so lower index = drawn on top
                 for (int i=14; i>=0; i--) begin
                     if (obj_active[i]) begin
                         int size;
@@ -99,7 +118,6 @@ module SpideyObjectsBitMap #(
                     local_x = offsetX - obj_x[hit_index];
                     local_y = offsetY - obj_y[hit_index];
                     
-                    // Hardware Scaling logic
                     if (obj_scale[hit_index] == 0) begin
                         tex_x = local_x[3:0]; tex_y = local_y[3:0];
                     end else if (obj_scale[hit_index] == 1) begin
@@ -108,21 +126,34 @@ module SpideyObjectsBitMap #(
                         tex_x = local_x[5:2]; tex_y = local_y[5:2];
                     end
                     
-                    // Combine 4-bit Y and 4-bit X into an 8-bit memory pointer (0 to 255)
+                    // If moving left, flip the X coordinate horizontally for the sprite so he faces left!
+                    if (obj_dir[hit_index] == 1'b1) begin
+                        tex_x = 4'd15 - tex_x;
+                    end
+                    
                     tex_addr = {tex_y, tex_x}; 
                     
-                    // Pull the exact color from the appropriate .mif memory
                     case (obj_type[hit_index])
                         3'd1: hit_color = mem_cop1[tex_addr];
                         3'd2: hit_color = mem_rob_stand[tex_addr];
                         3'd3: hit_color = mem_rob_run[tex_addr];
                         3'd4: hit_color = mem_maryjane[tex_addr];
+                        3'd5: hit_color = mem_riddler[tex_addr];
+                        3'd6: hit_color = mem_goblin[tex_addr];
                         default: hit_color = TRANSPARENT_ENCODING;
                     endcase
                     
                     if (hit_color != TRANSPARENT_ENCODING) begin
                         objectsRGB <= hit_color;
                         objectsDrawingRequest <= 1'b1;
+                        id_code <= obj_type[hit_index];
+                        if (obj_type[hit_index] == 3'd4) begin
+                            weight <= 2'd1; // Maryjane
+                        end else if (obj_type[hit_index] == 3'd5 || obj_type[hit_index] == 3'd6) begin
+                            weight <= (lfsr[1:0] == 2'd3) ? 2'd3 : lfsr[1:0] + 2'd1; // Riddler/Goblin random weight
+                        end else begin
+                            weight <= obj_scale[hit_index] + 2'd1; // Cop/Robber
+                        end
                     end
                 end
             end
@@ -132,53 +163,43 @@ module SpideyObjectsBitMap #(
                 INIT_CLEAR: begin
                     objects_placed <= 0;
                     for (int i=0; i<15; i++) obj_active[i] <= 1'b0;
-                    state <= INIT_SCATTER;
+                    state <= INIT_READ_ROM;
+                end
+                
+                INIT_READ_ROM: begin
+                    // Wait one clock cycle for level_data to become valid
+                    if (objects_placed < NUM_TOTAL_OBJECTS) begin
+                        state <= INIT_SCATTER;
+                    end else begin
+                        state <= PLAY;
+                    end
                 end
                 
                 INIT_SCATTER: begin
-                    if (objects_placed < NUM_TOTAL_OBJECTS) begin
-                        // Target type and scale LUT
-                        logic [2:0] t_type;
-                        logic [1:0] t_scale;
-                        logic [5:0] max_x, max_y;
-                        logic overlap;
-                        int size_t, size_i;
-                        
-                        // =====================================================================
-                        // ≡ƒמ« LEVEL DESIGNER CONFIGURATION ≡ƒמ«
-                        // This case statement is where you decide exactly how many of each 
-                        // object spawn on the screen! You can change t_type to spawn different 
-                        // characters, and t_scale to make them bigger or smaller.
-                        // Make sure you have exactly NUM_TOTAL_OBJECTS (15) cases!
-                        // =====================================================================
-                        case (objects_placed)
-                            8'd0:  begin t_type = 3'd4; t_scale = 2'd0; end // Maryjane
-                            8'd1:  begin t_type = 3'd1; t_scale = 2'd0; end // Cop
-                            8'd2:  begin t_type = 3'd1; t_scale = 2'd0; end // Cop
-                            8'd3:  begin t_type = 3'd1; t_scale = 2'd0; end // Cop
-                            8'd4:  begin t_type = 3'd2; t_scale = 2'd0; end // Robber Stand
-                            8'd5:  begin t_type = 3'd2; t_scale = 2'd0; end // Robber Stand
-                            8'd6:  begin t_type = 3'd2; t_scale = 2'd0; end // Robber Stand
-                            8'd7:  begin t_type = 3'd3; t_scale = 2'd0; end // Robber Run
-                            8'd8:  begin t_type = 3'd3; t_scale = 2'd2; end // Robber Run
-                            8'd9:  begin t_type = 3'd3; t_scale = 2'd0; end // Robber Run
-                            8'd10: begin t_type = 3'd1; t_scale = 2'd0; end // Cop
-                            8'd11: begin t_type = 3'd1; t_scale = 2'd0; end // Cop
-                            8'd12: begin t_type = 3'd3; t_scale = 2'd0; end // Robber Run
-                            8'd13: begin t_type = 3'd3; t_scale = 2'd1; end // Robber Run
-                            8'd14: begin t_type = 3'd2; t_scale = 2'd0; end // Robber Stand
-                            default: begin t_type = 3'd1; t_scale = 2'd0; end
-                        endcase
-                        
-                        // Check screen bounds based on scale
+                    logic [2:0] t_type;
+                    logic [1:0] t_scale;
+                    logic t_active;
+                    logic [5:0] max_x, max_y;
+                    logic overlap;
+                    int size_t, size_i;
+                    
+                    t_type = level_data[2:0];
+                    t_scale = level_data[4:3];
+                    t_active = level_data[5];
+                    
+                    if (!t_active) begin
+                        objects_placed <= objects_placed + 1;
+                        state <= INIT_READ_ROM;
+                    end else begin
                         max_x = (t_scale == 2) ? 6'd36 : ((t_scale == 1) ? 6'd38 : 6'd39);
                         max_y = (t_scale == 2) ? 6'd26 : ((t_scale == 1) ? 6'd28 : 6'd29);
                         
+                        // Spawn zones logic
                         if ( ((rand_x <= 16 && rand_y >= 14) || 
                               (rand_x >= 17 && rand_x <= 23 && rand_y >= 19) || 
                               (rand_x >= 24 && rand_y >= 14)) && 
                              rand_x <= max_x && rand_y <= max_y ) begin
-                            // Check overlap with already placed objects
+                             
                             overlap = 1'b0;
                             size_t = (t_scale == 0) ? 16 : ((t_scale == 1) ? 32 : 64);
                             
@@ -200,11 +221,11 @@ module SpideyObjectsBitMap #(
                                 obj_type[objects_placed] <= t_type;
                                 obj_scale[objects_placed] <= t_scale;
                                 obj_active[objects_placed] <= 1'b1;
+                                obj_dir[objects_placed] <= lfsr[0]; // Random initial direction
                                 objects_placed <= objects_placed + 1;
+                                state <= INIT_READ_ROM;
                             end
                         end
-                    end else begin
-                        state <= PLAY;
                     end
                 end
 
@@ -213,8 +234,39 @@ module SpideyObjectsBitMap #(
                         state <= INIT_CLEAR;
                     end
                     
+                    // GOBLIN MOVEMENT AND DESTRUCTION
+                    if (startOfFrame) begin
+                        for (int i=0; i<15; i++) begin
+                            if (obj_active[i] && obj_type[i] == 3'd6) begin // Goblin ID is 6
+                                // Move Horizontal
+                                if (obj_dir[i] == 1'b0) begin // Right
+                                    obj_x[i] <= obj_x[i] + 2;
+                                    if (obj_x[i] >= 640 - 32) obj_dir[i] <= 1'b1; // Bounce left
+                                end else begin // Left
+                                    obj_x[i] <= obj_x[i] - 2;
+                                    if (obj_x[i] <= 2) obj_dir[i] <= 1'b0; // Bounce right
+                                end
+                                
+                                // Destroy other items
+                                for (int j=0; j<15; j++) begin
+                                    if (i != j && obj_active[j]) begin
+                                        int size_i, size_j;
+                                        size_i = (obj_scale[i] == 0) ? 16 : ((obj_scale[i] == 1) ? 32 : 64);
+                                        size_j = (obj_scale[j] == 0) ? 16 : ((obj_scale[j] == 1) ? 32 : 64);
+                                        
+                                        // Overlap detection
+                                        if (obj_x[i] < obj_x[j] + size_j && obj_x[i] + size_i > obj_x[j] &&
+                                            obj_y[i] < obj_y[j] + size_j && obj_y[i] + size_i > obj_y[j]) begin
+                                            obj_active[j] <= 1'b0; // BOOM!
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    
                     if (collision_Web_Object && InsideRectangle) begin
-                        // Inactivate the object being collided with
+                        // Hook collision
                         for (int i=0; i<15; i++) begin
                             if (obj_active[i]) begin
                                 int size;

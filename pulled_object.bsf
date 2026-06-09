@@ -76,8 +76,8 @@ agreement for further details.
 	(port
 		(pt 0 144)
 		(input)
-		(text "id_code[1..0]" (rect 0 0 49 12)(font "Arial" ))
-		(text "id_code[1..0]" (rect 21 139 70 151)(font "Arial" ))
+		(text "id_code[2..0]" (rect 0 0 50 12)(font "Arial" ))
+		(text "id_code[2..0]" (rect 21 139 71 151)(font "Arial" ))
 		(line (pt 0 144)(pt 16 144)(line_width 3))
 	)
 	(port
@@ -107,6 +107,20 @@ agreement for further details.
 		(text "pulled_weight[1..0]" (rect 0 0 69 12)(font "Arial" ))
 		(text "pulled_weight[1..0]" (rect 150 59 219 71)(font "Arial" ))
 		(line (pt 240 64)(pt 224 64)(line_width 3))
+	)
+	(port
+		(pt 240 80)
+		(output)
+		(text "score_pulse" (rect 0 0 48 12)(font "Arial" ))
+		(text "score_pulse" (rect 171 75 219 87)(font "Arial" ))
+		(line (pt 240 80)(pt 224 80)(line_width 1))
+	)
+	(port
+		(pt 240 96)
+		(output)
+		(text "pulled_id[2..0]" (rect 0 0 53 12)(font "Arial" ))
+		(text "pulled_id[2..0]" (rect 166 91 219 103)(font "Arial" ))
+		(line (pt 240 96)(pt 224 96)(line_width 3))
 	)
 	(drawing
 		(rectangle (rect 16 16 224 192)(line_width 1))
