@@ -145,7 +145,7 @@ module SpideyObjectsBitMap #(
                         int size_t, size_i;
                         
                         // =====================================================================
-                        // 🎮 LEVEL DESIGNER CONFIGURATION 🎮
+                        // ≡ƒמ« LEVEL DESIGNER CONFIGURATION ≡ƒמ«
                         // This case statement is where you decide exactly how many of each 
                         // object spawn on the screen! You can change t_type to spawn different 
                         // characters, and t_scale to make them bigger or smaller.
@@ -174,7 +174,10 @@ module SpideyObjectsBitMap #(
                         max_x = (t_scale == 2) ? 6'd36 : ((t_scale == 1) ? 6'd38 : 6'd39);
                         max_y = (t_scale == 2) ? 6'd26 : ((t_scale == 1) ? 6'd28 : 6'd29);
                         
-                        if ((rand_x <= 12 || rand_x >= 27) && rand_x <= max_x && rand_y >= 15 && rand_y <= max_y) begin
+                        if ( ((rand_x <= 16 && rand_y >= 14) || 
+                              (rand_x >= 17 && rand_x <= 23 && rand_y >= 19) || 
+                              (rand_x >= 24 && rand_y >= 14)) && 
+                             rand_x <= max_x && rand_y <= max_y ) begin
                             // Check overlap with already placed objects
                             overlap = 1'b0;
                             size_t = (t_scale == 0) ? 16 : ((t_scale == 1) ? 32 : 64);
