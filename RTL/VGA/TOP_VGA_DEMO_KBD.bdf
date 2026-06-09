@@ -2117,11 +2117,6 @@ agreement for further details.
 	(bus)
 )
 (connector
-	(text "keypadValid" (rect -4606 -200 -4546 -183)(font "Intel Clear" ))
-	(pt -4496 -184)
-	(pt -4688 -184)
-)
-(connector
 	(text "Vcc" (rect -4568 -216 -4552 -199)(font "Intel Clear" ))
 	(pt -4496 -200)
 	(pt -4576 -200)
@@ -2320,6 +2315,11 @@ agreement for further details.
 	(text "time_out" (rect -4616 240 -4574 257)(font "Intel Clear" ))
 	(pt -4624 256)
 	(pt -4600 256)
+)
+(connector
+	(text "start_level_pulse" (rect -4606 -200 -4523 -183)(font "Intel Clear" ))
+	(pt -4496 -184)
+	(pt -4688 -184)
 )
 (junction (pt -5008 1136))
 (junction (pt -4160 1144))

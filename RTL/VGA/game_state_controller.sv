@@ -60,12 +60,10 @@ module game_state_controller (
                 end
                 
                 PLAY: begin
-                    if (time_out) begin
-                        if (threshold_met) begin
-                            state <= STORE;
-                        end else begin
-                            state <= GAME_OVER;
-                        end
+                    if (threshold_met) begin
+                        state <= STORE;
+                    end else if (time_out) begin
+                        state <= GAME_OVER;
                     end
                 end
                 
