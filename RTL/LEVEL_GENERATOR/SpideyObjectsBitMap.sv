@@ -28,7 +28,6 @@ module SpideyObjectsBitMap #(
     // -----------------------------------------------------------------------
     (* ram_init_file = "MIF/cop.mif" *)         	logic [7:0] mem_cop1 [0:1023];
     (* ram_init_file = "MIF/robber_stand.mif" *) 	logic [7:0] mem_rob_stand [0:1023];
-    (* ram_init_file = "MIF/robber_run.mif" *)   	logic [7:0] mem_rob_run [0:1023];
     (* ram_init_file = "MIF/maryjane.mif" *)     	logic [7:0] mem_maryjane [0:1023];
     (* ram_init_file = "MIF/riddler.mif" *)      	logic [7:0] mem_riddler [0:1023];
     (* ram_init_file = "MIF/goblin.mif" *)       	logic [7:0] mem_goblin [0:1023];
@@ -114,6 +113,7 @@ module SpideyObjectsBitMap #(
                     logic [4:0]  tex_x, tex_y;
                     logic [9:0]  tex_addr;
                     logic [7:0]  hit_color;
+                    logic [7:0]  color_cop, color_robber, color_maryjane, color_riddler, color_goblin;
                     
                     local_x = offsetX - obj_x[hit_index];
                     local_y = offsetY - obj_y[hit_index];
@@ -133,13 +133,19 @@ module SpideyObjectsBitMap #(
                     
                     tex_addr = {tex_y, tex_x}; 
                     
+                    color_cop    = mem_cop1[tex_addr];
+                    color_robber = mem_rob_stand[tex_addr];
+                    color_maryjane = mem_maryjane[tex_addr];
+                    color_riddler = mem_riddler[tex_addr];
+                    color_goblin = mem_goblin[tex_addr];
+
                     case (obj_type[hit_index])
-                        3'd1: hit_color = mem_cop1[tex_addr];
-                        3'd2: hit_color = mem_rob_stand[tex_addr];
-                        3'd3: hit_color = mem_rob_run[tex_addr];
-                        3'd4: hit_color = mem_maryjane[tex_addr];
-                        3'd5: hit_color = mem_riddler[tex_addr];
-                        3'd6: hit_color = mem_goblin[tex_addr];
+                        3'd1: hit_color = color_cop;
+                        3'd2: hit_color = color_robber;
+                        3'd3: hit_color = color_robber;
+                        3'd4: hit_color = color_maryjane;
+                        3'd5: hit_color = color_riddler;
+                        3'd6: hit_color = color_goblin;
                         default: hit_color = TRANSPARENT_ENCODING;
                     endcase
                     
@@ -147,15 +153,7 @@ module SpideyObjectsBitMap #(
                         objectsRGB <= hit_color;
                         objectsDrawingRequest <= 1'b1;
                         id_code <= obj_type[hit_index];
-                        if (obj_type[hit_index] == 3'd4) begin
-                            weight <= 2'd1; // Maryjane
-                        end else if (obj_type[hit_index] == 3'd5) begin
-                            weight <= (lfsr[1:0] == 2'd3 || lfsr[1:0] == 2'd0) ? 2'd1 : lfsr[1:0]; // Riddler random 1-3
-                        end else if (obj_type[hit_index] == 3'd6) begin
-                            weight <= 2'd3; // Goblin is heaviest
-                        end else begin
-                            weight <= obj_scale[hit_index] + 2'd1; // Cop/Robber
-                        end
+                        weight <= obj_scale[hit_index] + 2'd1; // ALWAYS output pure visual scale
                     end
                 end
             end
