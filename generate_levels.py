@@ -20,11 +20,11 @@ def empty_slot():
 
 LEVELS = {
     1: [
-        make_obj(ID_COP, SCALE_SMALL),
-        make_obj(ID_COP, SCALE_SMALL),
-        make_obj(ID_ROBBER_STAND, SCALE_SMALL),
-        make_obj(ID_ROBBER_RUN, SCALE_SMALL),
-        make_obj(ID_MARYJANE, SCALE_MEDIUM)
+        make_obj(ID_GOBLIN, SCALE_SMALL),
+        make_obj(ID_ROBBER_RUN, SCALE_LARGE),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
+        make_obj(ID_COP, SCALE_LARGE),
+        make_obj(ID_MARYJANE, SCALE_SMALL)
     ],
     2: [
         make_obj(ID_COP, SCALE_SMALL),
@@ -58,6 +58,48 @@ LEVELS = {
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_ROBBER_RUN, SCALE_SMALL),
         make_obj(ID_MARYJANE, SCALE_MEDIUM)
+    ],
+    6: [
+        make_obj(ID_COP, SCALE_SMALL),
+        make_obj(ID_COP, SCALE_SMALL),
+        make_obj(ID_COP, SCALE_SMALL),
+        make_obj(ID_COP, SCALE_SMALL),
+        make_obj(ID_COP, SCALE_SMALL),
+        make_obj(ID_ROBBER_STAND, SCALE_SMALL),
+        make_obj(ID_ROBBER_RUN, SCALE_SMALL)
+    ],
+    7: [
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
+        make_obj(ID_MARYJANE, SCALE_SMALL),
+        make_obj(ID_MARYJANE, SCALE_SMALL)
+    ],
+    8: [
+        make_obj(ID_RIDDLER, SCALE_SMALL),
+        make_obj(ID_RIDDLER, SCALE_SMALL),
+        make_obj(ID_RIDDLER, SCALE_SMALL),
+        make_obj(ID_RIDDLER, SCALE_SMALL),
+        make_obj(ID_COP, SCALE_SMALL),
+        make_obj(ID_MARYJANE, SCALE_SMALL),
+        make_obj(ID_MARYJANE, SCALE_SMALL)
+    ],
+    9: [
+        make_obj(ID_COP, SCALE_SMALL),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_RUN, SCALE_LARGE),
+        make_obj(ID_MARYJANE, SCALE_SMALL),
+        make_obj(ID_RIDDLER, SCALE_SMALL),
+        make_obj(ID_GOBLIN, SCALE_SMALL)
+    ],
+    10: [
+        make_obj(ID_GOBLIN, SCALE_SMALL),
+        make_obj(ID_GOBLIN, SCALE_SMALL),
+        make_obj(ID_MARYJANE, SCALE_SMALL),
+        make_obj(ID_MARYJANE, SCALE_SMALL),
+        make_obj(ID_MARYJANE, SCALE_SMALL)
     ]
 }
 

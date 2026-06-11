@@ -26,12 +26,12 @@ module SpideyObjectsBitMap #(
     // -----------------------------------------------------------------------
     // Memory Pointers directly to .mif files
     // -----------------------------------------------------------------------
-    (* ram_init_file = "MIF/cop.mif" *)         	logic [7:0] mem_cop1 [0:255];
-    (* ram_init_file = "MIF/robber_stand.mif" *) 	logic [7:0] mem_rob_stand [0:255];
-    (* ram_init_file = "MIF/robber_run.mif" *)   	logic [7:0] mem_rob_run [0:255];
-    (* ram_init_file = "MIF/maryjane.mif" *)     	logic [7:0] mem_maryjane [0:255];
-    (* ram_init_file = "MIF/riddler.mif" *)      	logic [7:0] mem_riddler [0:255];
-    (* ram_init_file = "MIF/goblin.mif" *)       	logic [7:0] mem_goblin [0:255];
+    (* ram_init_file = "MIF/cop.mif" *)         	logic [7:0] mem_cop1 [0:1023];
+    (* ram_init_file = "MIF/robber_stand.mif" *) 	logic [7:0] mem_rob_stand [0:1023];
+    (* ram_init_file = "MIF/robber_run.mif" *)   	logic [7:0] mem_rob_run [0:1023];
+    (* ram_init_file = "MIF/maryjane.mif" *)     	logic [7:0] mem_maryjane [0:1023];
+    (* ram_init_file = "MIF/riddler.mif" *)      	logic [7:0] mem_riddler [0:1023];
+    (* ram_init_file = "MIF/goblin.mif" *)       	logic [7:0] mem_goblin [0:1023];
     
     // Level loading memory (16 levels, 16 objects max = 256 addresses)
     (* ram_init_file = "MIF/levels.mif" *)          logic [7:0] mem_levels [0:255];
@@ -99,7 +99,7 @@ module SpideyObjectsBitMap #(
                 for (int i=14; i>=0; i--) begin
                     if (obj_active[i]) begin
                         int size;
-                        size = (obj_scale[i] == 0) ? 16 : ((obj_scale[i] == 1) ? 32 : 64);
+                        size = (obj_scale[i] == 0) ? 32 : ((obj_scale[i] == 1) ? 64 : 128);
                         if (offsetX >= obj_x[i] && offsetX < obj_x[i] + size &&
                             offsetY >= obj_y[i] && offsetY < obj_y[i] + size) begin
                             hit_found = 1'b1;
@@ -111,24 +111,24 @@ module SpideyObjectsBitMap #(
                 if (hit_found) begin
                     logic [10:0] local_x;
                     logic [10:0] local_y;
-                    logic [3:0]  tex_x, tex_y;
-                    logic [7:0]  tex_addr;
+                    logic [4:0]  tex_x, tex_y;
+                    logic [9:0]  tex_addr;
                     logic [7:0]  hit_color;
                     
                     local_x = offsetX - obj_x[hit_index];
                     local_y = offsetY - obj_y[hit_index];
                     
                     if (obj_scale[hit_index] == 0) begin
-                        tex_x = local_x[3:0]; tex_y = local_y[3:0];
+                        tex_x = local_x[4:0]; tex_y = local_y[4:0];
                     end else if (obj_scale[hit_index] == 1) begin
-                        tex_x = local_x[4:1]; tex_y = local_y[4:1];
+                        tex_x = local_x[5:1]; tex_y = local_y[5:1];
                     end else begin
-                        tex_x = local_x[5:2]; tex_y = local_y[5:2];
+                        tex_x = local_x[6:2]; tex_y = local_y[6:2];
                     end
                     
                     // If moving left, flip the X coordinate horizontally for the sprite so he faces left!
                     if (obj_dir[hit_index] == 1'b1) begin
-                        tex_x = 4'd15 - tex_x;
+                        tex_x = 5'd31 - tex_x;
                     end
                     
                     tex_addr = {tex_y, tex_x}; 
@@ -149,8 +149,10 @@ module SpideyObjectsBitMap #(
                         id_code <= obj_type[hit_index];
                         if (obj_type[hit_index] == 3'd4) begin
                             weight <= 2'd1; // Maryjane
-                        end else if (obj_type[hit_index] == 3'd5 || obj_type[hit_index] == 3'd6) begin
-                            weight <= (lfsr[1:0] == 2'd3) ? 2'd3 : lfsr[1:0] + 2'd1; // Riddler/Goblin random weight
+                        end else if (obj_type[hit_index] == 3'd5) begin
+                            weight <= (lfsr[1:0] == 2'd3 || lfsr[1:0] == 2'd0) ? 2'd1 : lfsr[1:0]; // Riddler random 1-3
+                        end else if (obj_type[hit_index] == 3'd6) begin
+                            weight <= 2'd3; // Goblin is heaviest
                         end else begin
                             weight <= obj_scale[hit_index] + 2'd1; // Cop/Robber
                         end
@@ -201,11 +203,11 @@ module SpideyObjectsBitMap #(
                              rand_x <= max_x && rand_y <= max_y ) begin
                              
                             overlap = 1'b0;
-                            size_t = (t_scale == 0) ? 16 : ((t_scale == 1) ? 32 : 64);
+                            size_t = (t_scale == 0) ? 32 : ((t_scale == 1) ? 64 : 128);
                             
                             for (int i=0; i<15; i++) begin
                                 if (i < objects_placed) begin
-                                    size_i = (obj_scale[i] == 0) ? 16 : ((obj_scale[i] == 1) ? 32 : 64);
+                                    size_i = (obj_scale[i] == 0) ? 32 : ((obj_scale[i] == 1) ? 64 : 128);
                                     if ((rand_x*16) < obj_x[i] + size_i && 
                                         (rand_x*16) + size_t > obj_x[i] &&
                                         (rand_y*16) < obj_y[i] + size_i && 
@@ -251,8 +253,8 @@ module SpideyObjectsBitMap #(
                                 for (int j=0; j<15; j++) begin
                                     if (i != j && obj_active[j]) begin
                                         int size_i, size_j;
-                                        size_i = (obj_scale[i] == 0) ? 16 : ((obj_scale[i] == 1) ? 32 : 64);
-                                        size_j = (obj_scale[j] == 0) ? 16 : ((obj_scale[j] == 1) ? 32 : 64);
+                                        size_i = (obj_scale[i] == 0) ? 32 : ((obj_scale[i] == 1) ? 64 : 128);
+                                        size_j = (obj_scale[j] == 0) ? 32 : ((obj_scale[j] == 1) ? 64 : 128);
                                         
                                         // Overlap detection
                                         if (obj_x[i] < obj_x[j] + size_j && obj_x[i] + size_i > obj_x[j] &&
@@ -270,7 +272,7 @@ module SpideyObjectsBitMap #(
                         for (int i=0; i<15; i++) begin
                             if (obj_active[i]) begin
                                 int size;
-                                size = (obj_scale[i] == 0) ? 16 : ((obj_scale[i] == 1) ? 32 : 64);
+                                size = (obj_scale[i] == 0) ? 32 : ((obj_scale[i] == 1) ? 64 : 128);
                                 if (offsetX >= obj_x[i] && offsetX < obj_x[i] + size &&
                                     offsetY >= obj_y[i] && offsetY < obj_y[i] + size) begin
                                     obj_active[i] <= 1'b0;

@@ -27,14 +27,23 @@ module game_state_controller (
     logic start_game_last;
     logic start_game_edge;
     
+    // Add skip button (Key 9)
+    logic skip_level;
+    logic skip_level_last;
+    logic skip_level_edge;
+    assign skip_level = ((keyPad == 4'd9) && keyPadValid);
+    
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
             start_game_last <= 1'b0;
+            skip_level_last <= 1'b0;
         end else begin
             start_game_last <= start_game;
+            skip_level_last <= skip_level;
         end
     end
     assign start_game_edge = start_game & ~start_game_last;
+    assign skip_level_edge = skip_level & ~skip_level_last;
 
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
@@ -60,7 +69,7 @@ module game_state_controller (
                 end
                 
                 PLAY: begin
-                    if (threshold_met) begin
+                    if (threshold_met || skip_level_edge) begin
                         state <= STORE;
                     end else if (time_out) begin
                         state <= GAME_OVER;

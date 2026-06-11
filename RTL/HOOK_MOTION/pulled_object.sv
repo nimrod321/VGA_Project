@@ -35,16 +35,16 @@ module pulled_object (
     // -------------------------------------------------------------------------
     // 1. Dynamic Boundary & Offset Calculation
     // -------------------------------------------------------------------------
-    logic [6:0] current_size;
-    logic [5:0] current_offset;
+    logic [7:0] current_size;
+    logic [6:0] current_offset;
 
     // Translate the weight input into physical pixel dimensions and centering offsets
     always_comb begin
         case (weight)
-            2'd1: begin current_size = 7'd16; current_offset = 6'd8;  end // Base size
-            2'd2: begin current_size = 7'd32; current_offset = 6'd16; end // Scaled x2
-            2'd3: begin current_size = 7'd64; current_offset = 6'd32; end // Scaled x4
-            default: begin current_size = 7'd16; current_offset = 6'd8; end
+            2'd1: begin current_size = 8'd32; current_offset = 7'd16;  end // Base size
+            2'd2: begin current_size = 8'd64; current_offset = 7'd32; end // Scaled x2
+            2'd3: begin current_size = 8'd128; current_offset = 7'd64; end // Scaled x4
+            default: begin current_size = 8'd32; current_offset = 7'd16; end
         endcase
     end
 
@@ -67,31 +67,31 @@ module pulled_object (
     // -------------------------------------------------------------------------
     // 3. Dynamic Scaling (Downsampling back to the 16x16 ROM address)
     // -------------------------------------------------------------------------
-    logic [3:0] rom_x;
-    logic [3:0] rom_y;
+    logic [4:0] rom_x;
+    logic [4:0] rom_y;
     
     // Bit-shift the coordinates to trick the ROM into drawing blocks of identical pixels
     always_comb begin
         case (weight)
-            2'd1: begin rom_x = local_x[3:0]; rom_y = local_y[3:0]; end // No shift
-            2'd2: begin rom_x = local_x[4:1]; rom_y = local_y[4:1]; end // Shift >> 1 (Divide by 2)
-            2'd3: begin rom_x = local_x[5:2]; rom_y = local_y[5:2]; end // Shift >> 2 (Divide by 4)
-            default: begin rom_x = local_x[3:0]; rom_y = local_y[3:0]; end
+            2'd1: begin rom_x = local_x[4:0]; rom_y = local_y[4:0]; end // No shift
+            2'd2: begin rom_x = local_x[5:1]; rom_y = local_y[5:1]; end // Shift >> 1 (Divide by 2)
+            2'd3: begin rom_x = local_x[6:2]; rom_y = local_y[6:2]; end // Shift >> 2 (Divide by 4)
+            default: begin rom_x = local_x[4:0]; rom_y = local_y[4:0]; end
         endcase
     end
 
-    logic [7:0] rom_address;
+    logic [9:0] rom_address;
     assign rom_address = {rom_y, rom_x}; // Concatenate into an 8-bit address (0 to 255)
 
     // -------------------------------------------------------------------------
     // 4. Inline M10K ROM Declarations
     // -------------------------------------------------------------------------
-    (* ram_init_file = "MIF/cop.mif" *)    				logic [7:0] mem_cop [0:255];
-    (* ram_init_file = "MIF/robber_stand.mif" *)    	logic [7:0] mem_robber [0:255];
-    (* ram_init_file = "MIF/robber_run.mif" *) 			logic [7:0] mem_robber_run [0:255];
-    (* ram_init_file = "MIF/maryjane.mif" *) 			logic [7:0] mem_maryjane [0:255];
-    (* ram_init_file = "MIF/riddler.mif" *) 			logic [7:0] mem_riddler [0:255];
-    (* ram_init_file = "MIF/goblin.mif" *) 				logic [7:0] mem_goblin [0:255];
+    (* ram_init_file = "MIF/cop.mif" *)    				logic [7:0] mem_cop [0:1023];
+    (* ram_init_file = "MIF/robber_stand.mif" *)    	logic [7:0] mem_robber [0:1023];
+    (* ram_init_file = "MIF/robber_run.mif" *) 			logic [7:0] mem_robber_run [0:1023];
+    (* ram_init_file = "MIF/maryjane.mif" *) 			logic [7:0] mem_maryjane [0:1023];
+    (* ram_init_file = "MIF/riddler.mif" *) 			logic [7:0] mem_riddler [0:1023];
+    (* ram_init_file = "MIF/goblin.mif" *) 				logic [7:0] mem_goblin [0:1023];
 
     logic [7:0] color_cop, color_robber, color_robber_run, color_maryjane, color_riddler, color_goblin;
     logic [7:0] selected_pixel_color;
@@ -137,10 +137,13 @@ module pulled_object (
             is_hooked_d <= is_hooked;
             
             if (is_hooked) begin
-                pulled_weight <= weight; 
-                pulled_id <= id_code; // Latch ID while hooked
+					if(weight && id_code) begin
+						pulled_weight <= weight; 
+						pulled_id <= id_code; // Latch ID while hooked
+					 end
             end else begin
                 pulled_weight <= 2'd0; // Empty hook = 0 weight
+					 pulled_id <= 3'd0;
             end
             
             // Generate score pulse exactly when hook fully retracts (falling edge)
