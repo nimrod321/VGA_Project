@@ -239,6 +239,8 @@ set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name SYSTEMVERILOG_FILE RTL/VGA/number_display_unit.sv
+set_global_assignment -name SYSTEMVERILOG_FILE RTL/VGA/hud_drawer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/LEVEL_GENERATOR/SpideyObjectsBitMap.sv
 set_global_assignment -name MIF_FILE RTL/HOOK_MOTION/sin_table.mif
 set_global_assignment -name MIF_FILE RTL/HOOK_MOTION/cos_table.mif

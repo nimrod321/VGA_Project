@@ -89,7 +89,7 @@ module pulled_object (
     (* ram_init_file = "MIF/cop.mif" *)    				logic [7:0] mem_cop [0:1023];
     (* ram_init_file = "MIF/robber_stand.mif" *)    	logic [7:0] mem_robber [0:1023];
     (* ram_init_file = "MIF/maryjane.mif" *) 			logic [7:0] mem_maryjane [0:1023];
-    (* ram_init_file = "MIF/riddler.mif" *) 			logic [7:0] mem_riddler [0:1023];
+    (* ram_init_file = "MIF/riddler.mif" *) 				logic [7:0] mem_riddler [0:1023];
     (* ram_init_file = "MIF/goblin.mif" *) 				logic [7:0] mem_goblin [0:1023];
 
     logic [7:0] color_cop, color_robber, color_maryjane, color_riddler, color_goblin;
@@ -97,11 +97,11 @@ module pulled_object (
 
     // Read from all ROMs simultaneously every clock cycle
     always_ff @(posedge clk) begin
-        color_cop    <= mem_cop[rom_address];
+        color_cop    	<= mem_cop[rom_address];
         color_robber    <= mem_robber[rom_address];
-        color_maryjane <= mem_maryjane[rom_address];
-        color_riddler <= mem_riddler[rom_address];
-        color_goblin <= mem_goblin[rom_address];
+        color_maryjane 	<= mem_maryjane[rom_address];
+        color_riddler 	<= mem_riddler[rom_address];
+        color_goblin 	<= mem_goblin[rom_address];
     end
 
     // Multiplexer to choose the correct color wire based on the pulled_id
@@ -166,7 +166,7 @@ module pulled_object (
                 pulled_id <= last_seen_id;
                 pulled_visual_weight <= last_seen_weight; // Lock in the visual size!
             end 
-            else if (!is_hooked) begin
+            else if (score_pulse) begin
                 pulled_weight <= 2'd0; // Empty hook = 0 weight
                 pulled_id <= 3'd0;
                 pulled_visual_weight <= 2'd0;
