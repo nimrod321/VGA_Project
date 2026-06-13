@@ -3,7 +3,7 @@ import os
 # Aligning ID Codes with obj_type in SpideyObjectsBitMap.sv
 ID_COP          = 1
 ID_ROBBER_STAND = 2
-ID_ROBBER_RUN   = 3
+ID_ROBBER_STAND   = 3
 ID_MARYJANE     = 4
 ID_RIDDLER      = 5
 ID_GOBLIN       = 6
@@ -21,7 +21,7 @@ def empty_slot():
 LEVELS = {
     1: [
         make_obj(ID_GOBLIN, SCALE_SMALL),
-        make_obj(ID_ROBBER_RUN, SCALE_LARGE),
+        make_obj(ID_ROBBER_STAND, SCALE_LARGE),
         make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
         make_obj(ID_COP, SCALE_LARGE),
         make_obj(ID_MARYJANE, SCALE_SMALL)
@@ -31,15 +31,15 @@ LEVELS = {
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_ROBBER_STAND, SCALE_SMALL),
-        make_obj(ID_ROBBER_RUN, SCALE_SMALL),
-        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_STAND, SCALE_SMALL),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
         make_obj(ID_MARYJANE, SCALE_MEDIUM)
     ],
     3: [
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
-        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
         make_obj(ID_MARYJANE, SCALE_MEDIUM),
         make_obj(ID_RIDDLER, SCALE_MEDIUM)
     ],
@@ -47,7 +47,7 @@ LEVELS = {
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
-        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
         make_obj(ID_MARYJANE, SCALE_MEDIUM),
         make_obj(ID_RIDDLER, SCALE_MEDIUM),
         make_obj(ID_RIDDLER, SCALE_MEDIUM)
@@ -56,7 +56,7 @@ LEVELS = {
         # BOSS BATTLE LEVEL!
         make_obj(ID_GOBLIN, SCALE_MEDIUM),
         make_obj(ID_COP, SCALE_SMALL),
-        make_obj(ID_ROBBER_RUN, SCALE_SMALL),
+        make_obj(ID_ROBBER_STAND, SCALE_SMALL),
         make_obj(ID_MARYJANE, SCALE_MEDIUM)
     ],
     6: [
@@ -66,14 +66,14 @@ LEVELS = {
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_ROBBER_STAND, SCALE_SMALL),
-        make_obj(ID_ROBBER_RUN, SCALE_SMALL)
+        make_obj(ID_ROBBER_STAND, SCALE_SMALL)
     ],
     7: [
         make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
         make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
-        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
-        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
-        make_obj(ID_ROBBER_RUN, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
+        make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
         make_obj(ID_MARYJANE, SCALE_SMALL),
         make_obj(ID_MARYJANE, SCALE_SMALL)
     ],
@@ -89,7 +89,7 @@ LEVELS = {
     9: [
         make_obj(ID_COP, SCALE_SMALL),
         make_obj(ID_ROBBER_STAND, SCALE_MEDIUM),
-        make_obj(ID_ROBBER_RUN, SCALE_LARGE),
+        make_obj(ID_ROBBER_STAND, SCALE_LARGE),
         make_obj(ID_MARYJANE, SCALE_SMALL),
         make_obj(ID_RIDDLER, SCALE_SMALL),
         make_obj(ID_GOBLIN, SCALE_SMALL)

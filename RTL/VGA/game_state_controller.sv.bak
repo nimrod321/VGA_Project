@@ -69,7 +69,7 @@ module game_state_controller (
                 end
                 
                 PLAY: begin
-                    if ((threshold_met && time_out) || skip_level_edge) begin
+                    if (threshold_met || skip_level_edge) begin
                         state <= STORE;
                     end else if (time_out) begin
                         state <= GAME_OVER;

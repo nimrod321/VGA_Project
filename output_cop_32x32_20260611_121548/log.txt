@@ -1,0 +1,5 @@
+File: cop_32x32
+Time: 2026-06-11 12:15:48.576226
+Mode: 8-bit
+Resolution: 32x32
+Output dir: C:/Lab_project/VGA_Demo_restored\output_cop_32x32_20260611_121548

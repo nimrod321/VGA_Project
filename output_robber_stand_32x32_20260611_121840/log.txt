@@ -1,0 +1,5 @@
+File: robber_stand_32x32
+Time: 2026-06-11 12:18:40.796368
+Mode: 8-bit
+Resolution: 32x32
+Output dir: C:/Lab_project/VGA_Demo_restored\output_robber_stand_32x32_20260611_121840

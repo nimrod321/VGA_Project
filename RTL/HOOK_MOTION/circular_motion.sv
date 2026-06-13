@@ -21,7 +21,7 @@ enum logic [1:0] {MOVE_LEFT_Q1, MOVE_LEFT_Q2, MOVE_RIGHT_Q1, MOVE_RIGHT_Q2} dir;
 
 //local variables
 localparam  [10:0] 	x_c = 320;
-localparam  [10:0] 	y_c = 60;
+localparam  [10:0] 	y_c = 92;
 
 // Internal registers
 logic [7:0]  angle_reg; 

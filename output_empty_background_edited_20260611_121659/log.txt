@@ -1,0 +1,5 @@
+File: empty_background_edited
+Time: 2026-06-11 12:17:00.627061
+Mode: 8-bit
+Resolution: 640x480
+Output dir: C:/Lab_project/VGA_Demo_restored\output_empty_background_edited_20260611_121659

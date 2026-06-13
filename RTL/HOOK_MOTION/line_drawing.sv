@@ -15,7 +15,7 @@ module line_drawing
 
 // Fixed start points
 localparam int x_s = 320;
-localparam int y_s = 60;
+localparam int y_s = 92;
 
 // Internal variables for signed coordinate math
 logic signed [12:0] dx, dy, px, py;
