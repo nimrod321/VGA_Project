@@ -1,0 +1,69 @@
+// (c) Technion IIT, Department of Electrical Engineering 2026
+// Reusable Multi-Digit Number Display Unit with Dynamic Start Coordinates
+
+module number_display_unit #(
+    parameter int NUM_DIGITS = 4,
+    parameter logic [7:0] DIGIT_COLOR = 8'hFF
+)(
+    input  logic        clk,
+    input  logic        resetN,
+    input  logic [10:0] pixelX,
+    input  logic [10:0] pixelY,
+    input  logic [15:0] value,
+    input  logic        enable,
+    input  logic [10:0] startX,
+    input  logic [10:0] startY,
+    
+    output logic        drawingRequest,
+    output logic [7:0]  RGBout
+);
+
+    // BCD digits (up to 5 digits supported)
+    logic [3:0] digit_vals [0:4];
+    assign digit_vals[0] = value % 10;
+    assign digit_vals[1] = (value / 10) % 10;
+    assign digit_vals[2] = (value / 100) % 10;
+    assign digit_vals[3] = (value / 1000) % 10;
+    assign digit_vals[4] = (value / 10000) % 10;
+
+    // Coordinate Math
+    logic [2:0] col_idx;
+    assign col_idx = (pixelX - startX) >> 5; // Divide by 32 (digit width is 32)
+    
+    logic inside_digit;
+    logic [3:0] active_digit;
+    logic [10:0] local_offsetX;
+    logic [10:0] local_offsetY;
+
+    always_comb begin
+        inside_digit = 1'b0;
+        active_digit = 4'd0;
+        local_offsetX = 11'd0;
+        local_offsetY = 11'd0;
+        
+        if (enable && 
+            pixelY >= startY && pixelY < startY + 64 &&
+            pixelX >= startX && pixelX < startX + (NUM_DIGITS * 32)) begin
+            
+            inside_digit = 1'b1;
+            local_offsetX = (pixelX - startX) % 32;
+            local_offsetY = pixelY - startY;
+            
+            active_digit = digit_vals[NUM_DIGITS - 1 - col_idx];
+        end
+    end
+
+    NumbersBitMap #(
+        .digit_color(DIGIT_COLOR)
+    ) bitmap_inst (
+        .clk(clk),
+        .resetN(resetN),
+        .offsetX(local_offsetX),
+        .offsetY(local_offsetY),
+        .InsideRectangle(inside_digit),
+        .digit(active_digit),
+        .drawingRequest(drawingRequest),
+        .RGBout(RGBout)
+    );
+
+endmodule

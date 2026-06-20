@@ -4,6 +4,7 @@
 module pulled_object (
     input  logic        clk,
     input  logic        resetN,
+    input  logic        play_enable,
     
     // VGA Beam Coordinates
     input  logic [10:0] pixelX,
@@ -109,10 +110,9 @@ module pulled_object (
         case (pulled_id)
             3'd1: selected_pixel_color = color_cop;
             3'd2: selected_pixel_color = color_robber;
-            3'd3: selected_pixel_color = color_robber; // Fallback to avoid transparency 
-            3'd4: selected_pixel_color = color_maryjane;
-            3'd5: selected_pixel_color = color_riddler;
-            3'd6: selected_pixel_color = color_goblin;
+            3'd3: selected_pixel_color = color_maryjane;
+            3'd4: selected_pixel_color = color_riddler;
+            3'd5: selected_pixel_color = color_goblin;
             default: selected_pixel_color = TRANSPARENT_ENCODING;
         endcase
     end
@@ -141,6 +141,16 @@ module pulled_object (
     
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
+            pulledRGBout         <= 8'h00;
+            pulledDrawingRequest <= 1'b0;
+            pulled_weight  <= 2'd0;
+            is_hooked_d <= 1'b0;
+            score_pulse <= 1'b0;
+            pulled_id <= 3'd0;
+            last_seen_weight <= 2'd0;
+            last_seen_id <= 3'd0;
+            pulled_visual_weight <= 2'd0;
+        end else if (!play_enable) begin
             pulledRGBout         <= 8'h00;
             pulledDrawingRequest <= 1'b0;
             pulled_weight  <= 2'd0;

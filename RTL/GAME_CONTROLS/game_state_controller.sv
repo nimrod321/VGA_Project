@@ -3,8 +3,9 @@ module game_state_controller (
     input  logic        resetN,
     
     // Game events
-    input  logic [3:0]  keyPad,      // From KBD module
+    input  logic [3:0]  keyPad,      
     input  logic        keyPadValid,
+    input  logic        enter_key,   
     input  logic        time_out,
     input  logic        threshold_met,
     
@@ -13,16 +14,17 @@ module game_state_controller (
     output logic [1:0]  current_state, // 0=LOBBY, 1=PLAY, 2=STORE, 3=GAME_OVER
     output logic        start_level_pulse, // Trigger to Bitmap Generator
     output logic        start_timer_pulse,
-    output logic        reset_score_pulse
+    output logic        reset_score_pulse,
+    output logic        play_enable
 );
 
     typedef enum logic [1:0] {LOBBY=2'd0, PLAY=2'd1, STORE=2'd2, GAME_OVER=2'd3} state_t;
     state_t state;
     
-    // Convert keyboard press (assuming Key 3 or 5 is Enter/Start) to a single pulse
-    logic start_game;
-    assign start_game = ((keyPad == 4'd5 || keyPad == 4'd3) && keyPadValid);
+    logic start_timer_pulse_d;
     
+    logic start_game;
+    assign start_game = enter_key;
     // Edge detector for start_game button
     logic start_game_last;
     logic start_game_edge;
@@ -48,13 +50,15 @@ module game_state_controller (
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
             state <= LOBBY;
-            current_level <= 1;
+            current_level <= 0;
             start_level_pulse <= 1'b0;
             start_timer_pulse <= 1'b0;
+            start_timer_pulse_d <= 1'b0;
             reset_score_pulse <= 1'b0;
         end else begin
             start_level_pulse <= 1'b0; 
             start_timer_pulse <= 1'b0;
+            start_timer_pulse_d <= start_timer_pulse;
             reset_score_pulse <= 1'b0;
             
             case (state)
@@ -69,9 +73,9 @@ module game_state_controller (
                 end
                 
                 PLAY: begin
-                    if ((threshold_met && time_out) || skip_level_edge) begin
+                    if (((threshold_met && time_out) || skip_level_edge) && !start_timer_pulse && !start_timer_pulse_d) begin
                         state <= STORE;
-                    end else if (time_out) begin
+                    end else if (time_out && !start_timer_pulse && !start_timer_pulse_d) begin
                         state <= GAME_OVER;
                     end
                 end
@@ -95,5 +99,6 @@ module game_state_controller (
     end
     
     assign current_state = state;
+    assign play_enable = (state == PLAY);
 
 endmodule

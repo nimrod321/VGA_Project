@@ -1,9 +1,14 @@
 module timer_manager (
     input  logic        clk,
     input  logic        resetN,
+    input  logic        play_enable, 
     
     // Inputs from Game State Controller
     input  logic        start_timer_pulse,
+    
+    // Powerup inputs
+    input  logic        passive_extra_time,
+    input  logic        add_time_pulse,
     
     // Outputs
     output logic [7:0]  time_left,
@@ -31,17 +36,22 @@ module timer_manager (
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
             time_left <= 0;
-            time_out <= 1'b1;
         end else begin
             if (start_timer_pulse) begin
-                time_left <= 60; // 60 seconds per level
-                time_out <= 1'b0;
-            end else if (timer_tick && time_left > 0) begin
-                time_left <= time_left - 1;
+                time_left <= 60 + (passive_extra_time ? 8'd10 : 8'd0);
+            end else if (!play_enable) begin
+                time_left <= 0; // Clear the timer whenever the game is not active (e.g. in Store)
+            end else begin
+                if (add_time_pulse) begin
+                    time_left <= (time_left + 10 > 99) ? 99 : (time_left + 10);
+                end else if (timer_tick && time_left > 0) begin
+                    time_left <= time_left - 1;
+                end
             end
-            
-            time_out <= (time_left == 0);
         end
     end
+
+    // Use continuous assignment so time_out correctly updates instantly
+    assign time_out = (time_left == 0);
 
 endmodule

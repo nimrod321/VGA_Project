@@ -1,0 +1,71 @@
+// (c) Technion IIT, Department of Electrical Engineering 2026
+// Background Controller - Switches between normal play background and store background
+
+module background_controller (
+    input  logic        clk,
+    input  logic [18:0] address,            // 19-bit address for 640x480 resolution (307,200 words)
+    input  logic [10:0] pixelX,             // <-- NEW PORT
+    input  logic [10:0] pixelY,             // <-- NEW PORT
+    input  logic [1:0]  current_state,      // 0=LOBBY, 1=PLAY, 2=STORE, 3=GAME_OVER
+    output logic [7:0]  bg_rgb              // 8-bit composite background color output
+);
+
+    logic [7:0] play_bg_rgb;
+
+    // Play Background ROM (background.mif)
+    altsyncram #(
+        .operation_mode("ROM"),
+        .width_a(8),
+        .widthad_a(19),
+        .numwords_a(307200),
+        .init_file("MIF/background.mif"),
+        .intended_device_family("Cyclone V")
+    ) play_rom_inst (
+        .clock0(clk),
+        .address_a(address),
+        .q_a(play_bg_rgb)
+    );
+
+    // Start Text ROM (256x64 = 16384 words)
+    logic [7:0] start_text_rgb;
+    logic [13:0] text_address;
+    
+    // Position text in the center-top of the screen (e.g. X=192, Y=100)
+    localparam int START_X = 192;
+    localparam int START_Y = 100;
+    
+    assign text_address = ((pixelY - START_Y) * 256) + (pixelX - START_X);
+    
+    altsyncram #(
+        .operation_mode("ROM"),
+        .width_a(8),
+        .widthad_a(14),
+        .numwords_a(16384),
+        .init_file("MIF/start_text.mif"),
+        .intended_device_family("Cyclone V")
+    ) start_rom_inst (
+        .clock0(clk),
+        .address_a(text_address),
+        .q_a(start_text_rgb)
+    );
+    
+    logic inside_text;
+    assign inside_text = (current_state == 2'd0) && 
+                         (pixelX >= START_X) && (pixelX < START_X + 256) &&
+                         (pixelY >= START_Y) && (pixelY < START_Y + 64);
+
+    // Select background: 
+    // - Dark shade of grey (8'h49) for STORE
+    // - Overlay START text in LOBBY
+    // - Default to level background
+    always_comb begin
+        if (current_state == 2'd2) begin
+            bg_rgb = 8'h49; // Dark grey
+        end else if (inside_text && start_text_rgb != 8'h00) begin
+            bg_rgb = start_text_rgb; // Text color
+        end else begin
+            bg_rgb = play_bg_rgb;
+        end
+    end
+
+endmodule

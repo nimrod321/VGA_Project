@@ -34,6 +34,10 @@ module	objects_mux	(
 					input		logic	hudDrawingRequest,
 					input		logic	[7:0]  hudRGB,
 					
+			// Store inputs
+					input		logic	storeDrawingRequest,
+					input		logic	[7:0]  storeRGB,
+					
 				   output	logic	[7:0] RGBOut
 );
 
@@ -50,10 +54,13 @@ begin
 		if (hudDrawingRequest == 1'b1 )
 			RGBOut <= hudRGB;  //highest priority
 			
+		else if (storeDrawingRequest == 1'b1 )
+			RGBOut <= storeRGB; //2nd priority
+			
 //--- logic for spider-web drawing (hook tip) -------------------------------------
 		
 		else if (webDrawingRequest == 1'b1 )   
-			RGBOut <= webRGB;  //2nd priority 
+			RGBOut <= webRGB;  //3rd priority 
 		 
 //--- logic for hook drawing ------------------------------------------------------		
 		

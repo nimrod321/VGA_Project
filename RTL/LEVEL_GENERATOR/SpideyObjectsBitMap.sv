@@ -7,6 +7,7 @@ module SpideyObjectsBitMap #(
 )(  
     input  logic        clk,
     input  logic        resetN,
+    input  logic        play_enable,
     input  logic [10:0] offsetX,         // offset from top left position of the play area
     input  logic [10:0] offsetY,
     input  logic        InsideRectangle, // input that the pixel is within the main play area
@@ -67,6 +68,18 @@ module SpideyObjectsBitMap #(
 
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
+            state <= INIT_CLEAR;
+            objects_placed <= 0;
+            lfsr <= 16'hACE1; // Seed MUST be non-zero
+            objectsRGB <= TRANSPARENT_ENCODING;
+            objectsDrawingRequest <= 1'b0;
+            id_code <= 3'd0;
+            weight <= 2'd0;
+            for (int i=0; i<15; i++) begin
+                obj_active[i] <= 1'b0;
+                obj_dir[i] <= 1'b0;
+            end
+        end else if (!play_enable) begin
             state <= INIT_CLEAR;
             objects_placed <= 0;
             lfsr <= 16'hACE1; // Seed MUST be non-zero
@@ -142,10 +155,9 @@ module SpideyObjectsBitMap #(
                     case (obj_type[hit_index])
                         3'd1: hit_color = color_cop;
                         3'd2: hit_color = color_robber;
-                        3'd3: hit_color = color_robber;
-                        3'd4: hit_color = color_maryjane;
-                        3'd5: hit_color = color_riddler;
-                        3'd6: hit_color = color_goblin;
+                        3'd3: hit_color = color_maryjane;
+                        3'd4: hit_color = color_riddler;
+                        3'd5: hit_color = color_goblin;
                         default: hit_color = TRANSPARENT_ENCODING;
                     endcase
                     

@@ -5,6 +5,7 @@
 module spider_web_object (
     input  logic        clk,
     input  logic        resetN,
+    input  logic        play_enable,
     input  logic [10:0] pixelX,      
     input  logic [10:0] pixelY,      
     input  logic [10:0] hook_x,      
@@ -47,6 +48,12 @@ module spider_web_object (
     // ====================================================
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
+            current_row       <= 128'b0;
+            local_x_d         <= 4'b0;
+            in_zone_d         <= 1'b0;
+            webDrawingRequest <= 1'b0;
+            webRGB            <= 8'h00;
+        end else if (!play_enable) begin
             current_row       <= 128'b0;
             local_x_d         <= 4'b0;
             in_zone_d         <= 1'b0;

@@ -3,11 +3,10 @@ module circular_motion
  ( 
 	input logic 			clk,
 	input logic 			resetN,
-	input logic             play_enable,
 	input	logic	 			freeze_angle,
 	input logic 			startOfFrame,
 	input logic  [10:0] 	current_R,
-	input logic          slowdown_active,
+	input logic             slowdown_active,
 	output logic [10:0] 	topLeftX,
 	output logic [10:0] 	topLeftY
   ) ;
@@ -38,53 +37,38 @@ assign x_offset = current_R * cos_rom[angle_reg];
 assign y_offset = current_R * sin_rom[angle_reg];
 
 logic [1:0] slowdown_counter;
-logic play_enable_d;
+always_ff @(posedge clk or negedge resetN) begin
+    if (!resetN) begin
+        slowdown_counter <= 2'd0;
+    end else if (startOfFrame) begin
+        slowdown_counter <= slowdown_counter + 1'b1;
+    end
+end
+logic slow_update_tick;
+assign slow_update_tick = slowdown_active ? (slowdown_counter == 2'b00) : 1'b1;
 
 always_ff @(posedge clk or negedge resetN) begin
     if (!resetN) begin
-        SM_Motion        <= IDLE_ST;
-        dir              <= MOVE_LEFT_Q1;
-        angle_reg        <= 8'd10;
-        subtract_x       <= 1'b0;
-        Xposition        <= 11'd0;
-        Yposition        <= 11'd0;
-        slowdown_counter <= 2'b00;
-        play_enable_d    <= 1'b0;
+        SM_Motion  <= IDLE_ST;
+        dir        <= MOVE_LEFT_Q1;
+        angle_reg  <= 8'd10;
+        subtract_x <= 1'b0;
+        Xposition  <= 11'd0;
+        Yposition  <= 11'd0;
     end 
 	 
 	 else begin
-        play_enable_d <= play_enable;
-        if (play_enable && !play_enable_d) begin
-            // Rising edge of play_enable: A new level has started. Reset hook angle/motion state!
-            SM_Motion        <= IDLE_ST;
-            dir              <= MOVE_LEFT_Q1;
-            angle_reg        <= 8'd10;
-            subtract_x       <= 1'b0;
-            Xposition        <= 11'd0;
-            Yposition        <= 11'd0;
-            slowdown_counter <= 2'b00;
-        end else begin
 	 
 	 case(SM_Motion)
 	 
 		//------------
 			IDLE_ST: begin
 		//------------
-			  if (startOfFrame && play_enable) begin
-					if (slowdown_active) begin
-						 slowdown_counter <= slowdown_counter + 1'b1;
-						 if (slowdown_counter == 2'b00 && !freeze_angle) begin
-							  SM_Motion <= UPDATE_ANGLE_ST; // Update angle every 4 frames
-						 end else begin
-							  SM_Motion <= WAIT_ROM_ST;     // Skip angle update, just update R
-						 end
-					end else begin
-						 slowdown_counter <= 2'b00;
-						 if (!freeze_angle)
-							  SM_Motion <= UPDATE_ANGLE_ST; // Update angle every frame
-						 else
-							  SM_Motion <= WAIT_ROM_ST;     // Skip angle update, just update R
-					end
+			  if (startOfFrame && slow_update_tick) begin
+					if (!freeze_angle)
+						 SM_Motion <= UPDATE_ANGLE_ST; // Swinging: Update the angle
+					else
+						 SM_Motion <= WAIT_ROM_ST;     // Shooting: Skip angle update, jump to math
 			  end
 		 end
 			
@@ -150,7 +134,6 @@ always_ff @(posedge clk or negedge resetN) begin
 			end
 		
 		endcase
-        end 
 	end		
 end
 

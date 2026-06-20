@@ -8,6 +8,9 @@ module hook_system (
     input  logic        object_collision,   // From your game's object hit detection
     input  logic [1:0]  grabbed_weight,
     input  logic [1:0]  speed_multiplier,
+	 input  logic 			longer_radius_en,
+	 input  logic 			slowdown_active,
+	 input  logic 			play_enable,
     input  logic [10:0] pixelX,
     input  logic [10:0] pixelY,
     
@@ -33,7 +36,7 @@ logic [10:0] y_e_wire;
 // -------------------------------------------------------------------------
 // Helper & Control Logic
 // -------------------------------------------------------------------------
-assign shoot_key_wire = ((keyPad == 4'd2) && (keyPadValid));
+assign shoot_key_wire = ((keyPad == 4'd2) && (keyPadValid) && play_enable);
 
 // Boundary Collission Detection
 assign wall_collision = (x_e_wire <= 0) || (x_e_wire >= 639) || (y_e_wire >= 479);
@@ -49,12 +52,15 @@ assign hook_y = y_e_wire;
 hook_motion_controller brain_inst (
     .clk(clk),
     .resetN(resetN),
+    .play_enable(play_enable),
     .startOfFrame(startOfFrame),
     .shoot_key(shoot_key_wire),
     .object_collision(object_collision),
 	 .wall_collision(wall_collision),
     .grabbed_weight(grabbed_weight),
     .speed_multiplier(speed_multiplier),
+	 .longer_radius_en(longer_radius_en),
+     .slowdown_active(slowdown_active),
     .current_R(current_R_wire),
     .freeze_angle(freeze_angle_wire),
 	 .is_hooked(is_hooked)
@@ -64,9 +70,11 @@ hook_motion_controller brain_inst (
 circular_motion physics_inst (
     .clk(clk),
     .resetN(resetN),
+    .play_enable(play_enable),
     .freeze_angle(freeze_angle_wire),
     .startOfFrame(startOfFrame),
     .current_R(current_R_wire),
+    .slowdown_active(slowdown_active),
     .topLeftX(x_e_wire),
     .topLeftY(y_e_wire)
 );
@@ -75,7 +83,7 @@ circular_motion physics_inst (
 line_drawing renderer_inst (
     .clk(clk),
     .resetN(resetN),
-    .enable(1'b1), // Always enabled, lineDrawingRequest acts as the valid mask
+    .enable(play_enable), // Disabled outside of play state
     .pixelX(pixelX),
     .pixelY(pixelY),
     .x_e(x_e_wire),

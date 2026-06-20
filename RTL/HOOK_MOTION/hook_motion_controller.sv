@@ -2,12 +2,15 @@
 module hook_motion_controller (
     input  logic        clk,
     input  logic        resetN,
+    input  logic        play_enable,
     input  logic        startOfFrame,
     input  logic        shoot_key,     		// Pulse when '2' is pressed
     input  logic        object_collision,    // Pulse when hook tip touches an object
 	 input  logic        wall_collision,    	// Pulse when hook tip touches the screen edges 
     input  logic [1:0]  grabbed_weight,		// 0 for empty, >0 for heavy objects
 	 input  logic [1:0]	speed_multiplier,
+	 input  logic 			longer_radius_en, 
+    input  logic        slowdown_active,
     
     output logic [10:0] current_R,
     output logic        freeze_angle,   	// Tells circular_motion to stop swinging
@@ -24,23 +27,42 @@ enum logic [1:0] {ST_SWING, ST_SHOOT, ST_RETRACT} state;
 // Internal variables
 logic [4:0] shoot_speed;
 logic [4:0] pull_speed;
+logic [8:0]	base_radius;	 
+logic play_enable_d;
 
-assign shoot_speed = BASE_SPEED * speed_multiplier;
-assign pull_speed = (BASE_SPEED - grabbed_weight) * speed_multiplier;
+logic [4:0] calc_shoot;
+logic [4:0] calc_pull;
+
+assign calc_shoot = (BASE_SPEED * speed_multiplier) >> slowdown_active;
+assign calc_pull  = ((BASE_SPEED - grabbed_weight) * speed_multiplier) >> slowdown_active;
+
+assign shoot_speed = (calc_shoot == 0) ? 5'd1 : calc_shoot;
+assign pull_speed  = (calc_pull == 0)  ? 5'd1 : calc_pull;
+
+assign base_radius = INITIAL_R << longer_radius_en;
 
 always_ff @(posedge clk or negedge resetN) begin
     if (!resetN) begin
         state        <= ST_SWING;
-        current_R    <= INITIAL_R;
+        current_R    <= base_radius;
         freeze_angle <= 1'b0;
 		  is_hooked    <= 1'b0;
+        play_enable_d <= 1'b0;
     end else begin
+        play_enable_d <= play_enable;
+        
+        if (play_enable && !play_enable_d) begin	// New level started --> Reset hook state
+            state        <= ST_SWING;
+            current_R    <= base_radius;
+            freeze_angle <= 1'b0;
+            is_hooked    <= 1'b0;
+        end else begin
         case (state)
             
             // --------------------------------
             ST_SWING: begin
             // --------------------------------
-                current_R    <= INITIAL_R;
+                current_R    <= base_radius;
                 freeze_angle <= 1'b0;
 					 is_hooked    <= 1'b0;
                 
@@ -64,21 +86,21 @@ always_ff @(posedge clk or negedge resetN) begin
 						is_hooked <= 1'b0; // Hit a wall, do NOT hook anything
 					end
 					
-               if (startOfFrame) begin
+               if (startOfFrame && play_enable) begin
                    current_R <= current_R + shoot_speed; 
-					end
+               end
             end
             
             // --------------------------------
             ST_RETRACT: begin
             // --------------------------------
                 freeze_angle <= 1'b1;
-                if (startOfFrame) begin
+                if (startOfFrame && play_enable) begin
                     current_R <= current_R - pull_speed;
                     
                     // Transition back to swing when fully retracted
-                    if (current_R <= INITIAL_R) begin
-                        current_R <= INITIAL_R; // Snap exactly to base radius
+                    if (current_R <= base_radius) begin
+                        current_R <= base_radius; // Snap exactly to base radius
                         state     <= ST_SWING;
 								is_hooked <= 1'b0;
                     end
@@ -86,6 +108,7 @@ always_ff @(posedge clk or negedge resetN) begin
             end
             
         endcase
+        end 
     end
 end
 
