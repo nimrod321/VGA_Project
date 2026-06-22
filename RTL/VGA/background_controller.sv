@@ -7,6 +7,7 @@ module background_controller (
     input  logic [10:0] pixelX,             
     input  logic [10:0] pixelY,             
     input  logic [1:0]  current_state,      // 0=LOBBY, 1=PLAY, 2=STORE, 3=GAME_OVER
+    input  logic        show_instructions_en, // From game_state_controller
     output logic [7:0]  bg_rgb              // 8-bit composite background color output
 );
 
@@ -82,16 +83,79 @@ module background_controller (
                                   (pixelX >= GAMEOVER_X) && (pixelX < GAMEOVER_X + 512) &&
                                   (pixelY >= GAMEOVER_Y) && (pixelY < GAMEOVER_Y + 64);
 
+    // Calculate 320x240 pixel-doubled address using shift-add to save DSP blocks
+    // 320 = 256 + 64 = (1<<8) + (1<<6)
+    logic [16:0] address_320;
+    logic [9:0] py_half;
+    logic [9:0] px_half;
+    assign py_half = pixelY[10:1];
+    assign px_half = pixelX[10:1];
+    assign address_320 = (py_half << 8) + (py_half << 6) + px_half;
+
+    // -------------------------------------------------------------
+    // NEW UI BACKGROUND ROMS (Memory Efficient 320x240 pixel doubled)
+    // -------------------------------------------------------------
+    logic [7:0] lobby_bg_rgb;
+    logic [7:0] store_bg_rgb;
+    logic [7:0] instructions_bg_rgb;
+
+    altsyncram #(
+        .operation_mode("ROM"),
+        .width_a(8),
+        .widthad_a(17),
+        .numwords_a(76800),
+        .init_file("MIF/lobby_bg.mif"),
+        .intended_device_family("Cyclone V")
+    ) lobby_rom_inst (
+        .clock0(clk),
+        .address_a(address_320),
+        .q_a(lobby_bg_rgb)
+    );
+
+    altsyncram #(
+        .operation_mode("ROM"),
+        .width_a(8),
+        .widthad_a(17),
+        .numwords_a(76800),
+        .init_file("MIF/store_bg.mif"),
+        .intended_device_family("Cyclone V")
+    ) store_rom_inst (
+        .clock0(clk),
+        .address_a(address_320),
+        .q_a(store_bg_rgb)
+    );
+
+    altsyncram #(
+        .operation_mode("ROM"),
+        .width_a(8),
+        .widthad_a(17),
+        .numwords_a(76800),
+        .init_file("MIF/instructions_bg.mif"),
+        .intended_device_family("Cyclone V")
+    ) instructions_rom_inst (
+        .clock0(clk),
+        .address_a(address_320),
+        .q_a(instructions_bg_rgb)
+    );
+
     // Select background: 
-    // - Dark shade of grey (8'h49) for STORE
+    // - SHOW INSTRUCTIONS if enabled in LOBBY
+    // - STORE background if in STORE state
+    // - LOBBY background if in LOBBY state
     // - Overlay START text in LOBBY (black color)
     // - Overlay GAME OVER text in GAME_OVER (black color)
-    // - Default to level background
+    // - Default to level background (play_bg_rgb)
     always_comb begin
-        if (current_state == 2'd2) begin
-            bg_rgb = 8'h49; // Dark grey
-        end else if (inside_start_text && start_text_bit == 1'b1) begin
-            bg_rgb = 8'h00; // Black text
+        if (current_state == 2'd0) begin
+            if (show_instructions_en) begin
+                bg_rgb = instructions_bg_rgb;
+            end else if (inside_start_text && start_text_bit == 1'b1) begin
+                bg_rgb = 8'h00; // Black text overlay
+            end else begin
+                bg_rgb = lobby_bg_rgb;
+            end
+        end else if (current_state == 2'd2) begin
+            bg_rgb = store_bg_rgb;
         end else if (inside_gameover_text && gameover_text_bit == 1'b1) begin
             bg_rgb = 8'h00; // Black text
         end else begin

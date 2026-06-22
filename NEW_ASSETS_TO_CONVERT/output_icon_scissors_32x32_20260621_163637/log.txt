@@ -1,0 +1,5 @@
+File: icon_scissors_32x32
+Time: 2026-06-21 16:36:37.697690
+Mode: 8-bit
+Resolution: 32x32
+Output dir: C:/Lab_project/VGA_Demo_restored/NEW_ASSETS_TO_CONVERT\output_icon_scissors_32x32_20260621_163637

@@ -21,9 +21,9 @@ agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 280 256)
+	(rect 16 16 280 288)
 	(text "hook_system" (rect 5 0 60 12)(font "Arial" ))
-	(text "inst" (rect 8 224 20 236)(font "Arial" ))
+	(text "inst" (rect 8 256 20 268)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -90,16 +90,30 @@ agreement for further details.
 	(port
 		(pt 0 176)
 		(input)
-		(text "pixelX[10..0]" (rect 0 0 46 12)(font "Arial" ))
-		(text "pixelX[10..0]" (rect 21 171 67 183)(font "Arial" ))
-		(line (pt 0 176)(pt 16 176)(line_width 3))
+		(text "slowdown_active" (rect 0 0 66 12)(font "Arial" ))
+		(text "slowdown_active" (rect 21 171 87 183)(font "Arial" ))
+		(line (pt 0 176)(pt 16 176)(line_width 1))
 	)
 	(port
 		(pt 0 192)
 		(input)
+		(text "play_enable" (rect 0 0 47 12)(font "Arial" ))
+		(text "play_enable" (rect 21 187 68 199)(font "Arial" ))
+		(line (pt 0 192)(pt 16 192)(line_width 1))
+	)
+	(port
+		(pt 0 208)
+		(input)
+		(text "pixelX[10..0]" (rect 0 0 46 12)(font "Arial" ))
+		(text "pixelX[10..0]" (rect 21 203 67 215)(font "Arial" ))
+		(line (pt 0 208)(pt 16 208)(line_width 3))
+	)
+	(port
+		(pt 0 224)
+		(input)
 		(text "pixelY[10..0]" (rect 0 0 47 12)(font "Arial" ))
-		(text "pixelY[10..0]" (rect 21 187 68 199)(font "Arial" ))
-		(line (pt 0 192)(pt 16 192)(line_width 3))
+		(text "pixelY[10..0]" (rect 21 219 68 231)(font "Arial" ))
+		(line (pt 0 224)(pt 16 224)(line_width 3))
 	)
 	(port
 		(pt 264 32)
@@ -137,6 +151,6 @@ agreement for further details.
 		(line (pt 264 96)(pt 248 96)(line_width 1))
 	)
 	(drawing
-		(rectangle (rect 16 16 248 224)(line_width 1))
+		(rectangle (rect 16 16 248 256)(line_width 1))
 	)
 )

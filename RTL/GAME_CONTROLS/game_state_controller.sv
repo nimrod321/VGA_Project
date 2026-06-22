@@ -15,7 +15,8 @@ module game_state_controller (
     output logic        start_level_pulse, // Trigger to Bitmap Generator
     output logic        start_timer_pulse,
     output logic        reset_score_pulse,
-    output logic        play_enable
+    output logic        play_enable,
+    output logic        show_instructions_en
 );
 
     typedef enum logic [1:0] {LOBBY=2'd0, PLAY=2'd1, STORE=2'd2, GAME_OVER=2'd3} state_t;
@@ -35,17 +36,26 @@ module game_state_controller (
     logic skip_level_edge;
     assign skip_level = ((keyPad == 4'd9) && keyPadValid);
     
+    // Add key 0 edge detection for Instructions Menu
+    logic key_zero;
+    logic key_zero_last;
+    logic key_zero_edge;
+    assign key_zero = ((keyPad == 4'd0) && keyPadValid);
+
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
             start_game_last <= 1'b0;
             skip_level_last <= 1'b0;
+            key_zero_last <= 1'b0;
         end else begin
             start_game_last <= start_game;
             skip_level_last <= skip_level;
+            key_zero_last <= key_zero;
         end
     end
     assign start_game_edge = start_game & ~start_game_last;
     assign skip_level_edge = skip_level & ~skip_level_last;
+    assign key_zero_edge = key_zero & ~key_zero_last;
 
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
@@ -55,6 +65,7 @@ module game_state_controller (
             start_timer_pulse <= 1'b0;
             start_timer_pulse_d <= 1'b0;
             reset_score_pulse <= 1'b0;
+            show_instructions_en <= 1'b0;
         end else begin
             start_level_pulse <= 1'b0; 
             start_timer_pulse <= 1'b0;
@@ -63,12 +74,15 @@ module game_state_controller (
             
             case (state)
                 LOBBY: begin
-                    if (start_game_edge) begin
+                    if (key_zero_edge) begin
+                        show_instructions_en <= ~show_instructions_en; // Toggle instructions
+                    end else if (start_game_edge && !show_instructions_en) begin
                         state <= PLAY;
                         start_level_pulse <= 1'b1;
                         start_timer_pulse <= 1'b1;
                         reset_score_pulse <= 1'b1;
                         current_level <= 1;
+                        show_instructions_en <= 1'b0;
                     end
                 end
                 

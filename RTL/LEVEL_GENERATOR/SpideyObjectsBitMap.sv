@@ -16,6 +16,13 @@ module SpideyObjectsBitMap #(
     input  logic [3:0]  current_level,   // From game_state_controller
     input  logic        collision_Web_Object, // Collision input
 	
+    // Web Bomb Interface
+    input  logic [10:0] hook_x,
+    input  logic [10:0] hook_y,
+    input  logic        web_bomb_pulse,
+    output logic        web_bomb_bonus_pulse,
+    output logic [15:0] web_bomb_bonus_amount,
+    
     output logic        objectsDrawingRequest,  // output that the pixel should be displayed
     output logic [7:0]  objectsRGB,          	// rgb value from the bitmap 
     output logic [2:0]  id_code,
@@ -52,6 +59,12 @@ module SpideyObjectsBitMap #(
     logic [15:0] lfsr;
     logic [7:0]  objects_placed;
     
+    // Goblin Bomb State
+    logic        bomb_active;
+    logic [10:0] bomb_x;
+    logic [10:0] bomb_y;
+    logic [5:0]  explosion_timer;
+    
     logic [5:0] rand_x; 
     logic [5:0] rand_y; 
     assign rand_x = lfsr[5:0];
@@ -66,6 +79,12 @@ module SpideyObjectsBitMap #(
     typedef enum logic [2:0] {INIT_CLEAR, INIT_READ_ROM, INIT_SCATTER, PLAY} state_t;
     state_t state;
 
+    // Web Bomb State
+    logic        web_explosion_active;
+    logic [5:0]  web_explosion_timer;
+    logic [10:0] web_explosion_x;
+    logic [10:0] web_explosion_y;
+
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
             state <= INIT_CLEAR;
@@ -75,6 +94,12 @@ module SpideyObjectsBitMap #(
             objectsDrawingRequest <= 1'b0;
             id_code <= 3'd0;
             weight <= 2'd0;
+            bomb_active <= 1'b0;
+            explosion_timer <= 0;
+            web_explosion_active <= 1'b0;
+            web_explosion_timer <= 0;
+            web_bomb_bonus_pulse <= 1'b0;
+            web_bomb_bonus_amount <= 0;
             for (int i=0; i<15; i++) begin
                 obj_active[i] <= 1'b0;
                 obj_dir[i] <= 1'b0;
@@ -87,6 +112,12 @@ module SpideyObjectsBitMap #(
             objectsDrawingRequest <= 1'b0;
             id_code <= 3'd0;
             weight <= 2'd0;
+            bomb_active <= 1'b0;
+            explosion_timer <= 0;
+            web_explosion_active <= 1'b0;
+            web_explosion_timer <= 0;
+            web_bomb_bonus_pulse <= 1'b0;
+            web_bomb_bonus_amount <= 0;
             for (int i=0; i<15; i++) begin
                 obj_active[i] <= 1'b0;
                 obj_dir[i] <= 1'b0;
@@ -167,10 +198,49 @@ module SpideyObjectsBitMap #(
                         id_code <= obj_type[hit_index];
                         weight <= obj_scale[hit_index] + 2'd1; // ALWAYS output pure visual scale
                     end
+                end // end if hit_found
+                
+                // OVERLAY BOMB AND EXPLOSION
+                if (web_explosion_timer > 0) begin
+                    // Draw massive expanding white web explosion
+                    int dx, dy, dist_sq;
+                    dx = offsetX - web_explosion_x;
+                    dy = offsetY - web_explosion_y;
+                    dist_sq = dx*dx + dy*dy;
+                    if (dist_sq < (30 - web_explosion_timer)*(30 - web_explosion_timer) * 4) begin
+                        // Checkered pattern for "web" look
+                        if ((offsetX[2] ^ offsetY[2]) == 1'b1) begin
+                            objectsRGB <= 8'b111_111_11; // White web
+                            objectsDrawingRequest <= 1'b1;
+                            id_code <= 3'd0;
+                            weight <= 2'd0;
+                        end
+                    end
+                end else if (explosion_timer > 0) begin
+                    // Draw massive expanding orange/yellow explosion
+                    int dx, dy, dist_sq;
+                    dx = offsetX - bomb_x;
+                    dy = offsetY - bomb_y;
+                    dist_sq = dx*dx + dy*dy;
+                    if (dist_sq < (30 - explosion_timer)*(30 - explosion_timer) * 4) begin
+                        objectsRGB <= (explosion_timer[2]) ? 8'b111_111_00 : 8'b111_000_00; // Flashing yellow/red
+                        objectsDrawingRequest <= 1'b1;
+                        id_code <= 3'd0;
+                        weight <= 2'd0;
+                    end
+                end else if (bomb_active) begin
+                    int dx, dy, dist_sq;
+                    dx = offsetX - bomb_x;
+                    dy = offsetY - bomb_y;
+                    dist_sq = dx*dx + dy*dy;
+                    if (dist_sq < 64) begin // Radius 8
+                        objectsRGB <= 8'b111_000_00; // Solid red circle
+                        objectsDrawingRequest <= 1'b1;
+                        id_code <= 3'd0;
+                        weight <= 2'd0;
+                    end
                 end
-            end
-
-            // 3. Object Management State Machine
+            end // end if state == PLAY
             case (state)
                 INIT_CLEAR: begin
                     objects_placed <= 0;
@@ -246,10 +316,75 @@ module SpideyObjectsBitMap #(
                         state <= INIT_CLEAR;
                     end
                     
-                    // GOBLIN MOVEMENT AND DESTRUCTION
+                    // GOBLIN BOMB AND MOVEMENT
                     if (startOfFrame) begin
+                        web_bomb_bonus_pulse <= 1'b0; // Default off
+                        
+                        // WEB BOMB PHYSICS
+                        if (web_bomb_pulse) begin
+                            logic [15:0] local_bonus;
+                            local_bonus = 0;
+                            for (int k=0; k<15; k++) begin
+                                if (obj_active[k] && obj_type[k] != 3'd5) begin
+                                    int size_k;
+                                    size_k = (obj_scale[k] == 0) ? 32 : ((obj_scale[k] == 1) ? 64 : 128);
+                                    if (obj_x[k] + size_k > hook_x - 64 && obj_x[k] < hook_x + 64 &&
+                                        obj_y[k] + size_k > hook_y - 64 && obj_y[k] < hook_y + 64) begin
+                                        obj_active[k] <= 1'b0; // Destroy it!
+                                        // Sum up the bonus!
+                                        case (obj_type[k])
+                                            3'd1: ; // Ignore cops so we don't penalize bonus!
+                                            3'd2: local_bonus = local_bonus + (50 * (obj_scale[k]+1) * (obj_scale[k]+1));
+                                            3'd3: local_bonus = local_bonus + 500;
+                                            3'd4: local_bonus = local_bonus + 1000;
+                                            default: ;
+                                        endcase
+                                    end
+                                end
+                            end
+                            web_bomb_bonus_amount <= local_bonus;
+                            web_bomb_bonus_pulse <= 1'b1;
+                            
+                            // Trigger Web Explosion Graphics
+                            web_explosion_active <= 1'b1;
+                            web_explosion_timer <= 30;
+                            web_explosion_x <= hook_x;
+                            web_explosion_y <= hook_y;
+                        end else if (web_explosion_timer > 0) begin
+                            web_explosion_timer <= web_explosion_timer - 1;
+                        end
+                        
+                        // Bomb physics
+                        if (bomb_active) begin
+                            bomb_y <= bomb_y + 3; // Fall down
+                            if (bomb_y >= 400) begin
+                                bomb_active <= 1'b0;
+                                explosion_timer <= 30; // 30 frames of explosion
+                            end
+                        end else if (explosion_timer > 0) begin
+                            explosion_timer <= explosion_timer - 1;
+                            // Destroy items in radius
+                            for (int j=0; j<15; j++) begin
+                                if (obj_active[j] && obj_type[j] != 3'd5) begin
+                                    int size_j;
+                                    size_j = (obj_scale[j] == 0) ? 32 : ((obj_scale[j] == 1) ? 64 : 128);
+                                    if (obj_x[j] + size_j > bomb_x - 64 && obj_x[j] < bomb_x + 64 &&
+                                        obj_y[j] + size_j > bomb_y - 64 && obj_y[j] < bomb_y + 64) begin
+                                        obj_active[j] <= 1'b0; // BOOM!
+                                    end
+                                end
+                            end
+                        end
+                        
                         for (int i=0; i<15; i++) begin
-                            if (obj_active[i] && obj_type[i] == 3'd6) begin // Goblin ID is 6
+                            if (obj_active[i] && obj_type[i] == 3'd5) begin // Goblin ID is 5
+                                // Drop bomb chance
+                                if (!bomb_active && explosion_timer == 0 && lfsr[7:0] == 8'b00000000) begin
+                                    bomb_active <= 1'b1;
+                                    bomb_x <= obj_x[i] + 16;
+                                    bomb_y <= obj_y[i] + 32;
+                                end
+                                
                                 // Move Horizontal
                                 if (obj_dir[i] == 1'b0) begin // Right
                                     obj_x[i] <= obj_x[i] + 2;

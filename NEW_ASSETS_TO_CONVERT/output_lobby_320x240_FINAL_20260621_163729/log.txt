@@ -1,0 +1,5 @@
+File: lobby_320x240_FINAL
+Time: 2026-06-21 16:37:29.998818
+Mode: 8-bit
+Resolution: 640x480
+Output dir: C:/Lab_project/VGA_Demo_restored/NEW_ASSETS_TO_CONVERT\output_lobby_320x240_FINAL_20260621_163729

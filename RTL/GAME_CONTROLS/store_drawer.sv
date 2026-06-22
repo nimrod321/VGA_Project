@@ -58,8 +58,38 @@ module store_drawer (
                          title_bit == 1'b1);
 
     // -------------------------------------------------------------------------
-    // Instantiate price display units & text labels
+    // Store Icons (32x32 = 1024 words, 8-bit wide)
     // -------------------------------------------------------------------------
+    logic [7:0] icon_speed_rgb, icon_time_rgb, icon_radius_rgb, icon_slow_rgb;
+    logic [9:0] icon_speed_addr, icon_time_addr, icon_radius_addr, icon_slow_addr;
+    
+    localparam int ICON_Y = 175;
+    
+    assign icon_speed_addr  = ((pixelY - ICON_Y) << 5) + (pixelX - 90);
+    assign icon_time_addr   = ((pixelY - ICON_Y) << 5) + (pixelX - 230);
+    assign icon_radius_addr = ((pixelY - ICON_Y) << 5) + (pixelX - 370);
+    assign icon_slow_addr   = ((pixelY - ICON_Y) << 5) + (pixelX - 510);
+    
+    altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_speed_32x32.mif"), .intended_device_family("Cyclone V"))
+        rom_icon_speed (.clock0(clk), .address_a(icon_speed_addr), .q_a(icon_speed_rgb));
+        
+    altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_clock_32x32.mif"), .intended_device_family("Cyclone V"))
+        rom_icon_time (.clock0(clk), .address_a(icon_time_addr), .q_a(icon_time_rgb));
+        
+    altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_web_32x32.mif"), .intended_device_family("Cyclone V"))
+        rom_icon_radius (.clock0(clk), .address_a(icon_radius_addr), .q_a(icon_radius_rgb));
+        
+    altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_scissors_32x32.mif"), .intended_device_family("Cyclone V"))
+        rom_icon_slow (.clock0(clk), .address_a(icon_slow_addr), .q_a(icon_slow_rgb));
+        
+    logic draw_icon_speed, draw_icon_time, draw_icon_radius, draw_icon_slow;
+    assign draw_icon_speed  = (current_state == 2'd2 && pixelX >= 90 && pixelX < 122 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && icon_speed_rgb != 8'h00);
+    assign draw_icon_time   = (current_state == 2'd2 && pixelX >= 230 && pixelX < 262 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && icon_time_rgb != 8'h00);
+    assign draw_icon_radius = (current_state == 2'd2 && pixelX >= 370 && pixelX < 402 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && icon_radius_rgb != 8'h00);
+    assign draw_icon_slow   = (current_state == 2'd2 && pixelX >= 510 && pixelX < 542 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && icon_slow_rgb != 8'h00);
+
+    // -------------------------------------------------------------------------
+    // Instantiate price display units & text labels
     
     // Addresses for 128x32 text ROMs
     logic [11:0] text_addr_speed;
@@ -135,6 +165,18 @@ module store_drawer (
             if (draw_title) begin
                 storeDrawingRequest = 1'b1;
                 storeRGB = 8'h00; // Black title text
+            end else if (draw_icon_speed) begin
+                storeDrawingRequest = 1'b1;
+                storeRGB = icon_speed_rgb;
+            end else if (draw_icon_time) begin
+                storeDrawingRequest = 1'b1;
+                storeRGB = icon_time_rgb;
+            end else if (draw_icon_radius) begin
+                storeDrawingRequest = 1'b1;
+                storeRGB = icon_radius_rgb;
+            end else if (draw_icon_slow) begin
+                storeDrawingRequest = 1'b1;
+                storeRGB = icon_slow_rgb;
             end else if (speed_draw) begin
                 storeDrawingRequest = 1'b1;
                 storeRGB = speed_rgb;

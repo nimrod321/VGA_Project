@@ -1,0 +1,5 @@
+File: instructions_320x240_FINAL
+Time: 2026-06-21 16:35:37.998683
+Mode: 8-bit
+Resolution: 640x480
+Output dir: C:/Lab_project/VGA_Demo_restored/NEW_ASSETS_TO_CONVERT\output_instructions_320x240_FINAL_20260621_163536

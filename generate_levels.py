@@ -3,10 +3,9 @@ import os
 # Aligning ID Codes with obj_type in SpideyObjectsBitMap.sv
 ID_COP          = 1
 ID_ROBBER_STAND = 2
-ID_ROBBER_STAND   = 3
-ID_MARYJANE     = 4
-ID_RIDDLER      = 5
-ID_GOBLIN       = 6
+ID_MARYJANE     = 3
+ID_RIDDLER      = 4
+ID_GOBLIN       = 5
 
 SCALE_SMALL  = 0
 SCALE_MEDIUM = 1
