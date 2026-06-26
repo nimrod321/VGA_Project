@@ -11,6 +11,7 @@ module hud_drawer (
     input  logic        startOfFrame,
     
     // Game State Data
+    input  logic [1:0]  current_state,
     input  logic [15:0] score,
     input  logic [15:0] threshold,     // Goal
     input  logic [7:0]  time_left,
@@ -171,21 +172,23 @@ module hud_drawer (
         hudDrawingRequest = 1'b0;
         hudRGB = 8'h00;
         
-        if (score_draw) begin
-            hudDrawingRequest = 1'b1;
-            hudRGB = score_rgb;
-        end else if (goal_draw) begin
-            hudDrawingRequest = 1'b1;
-            hudRGB = goal_rgb;
-        end else if (timer_draw) begin
-            hudDrawingRequest = 1'b1;
-            hudRGB = timer_rgb;
-        end else if (level_draw) begin
-            hudDrawingRequest = 1'b1;
-            hudRGB = level_rgb;
-        end else if (pop_draw) begin
-            hudDrawingRequest = 1'b1;
-            hudRGB = pop_rgb;
+        if (current_state == 2'd1) begin
+            if (score_draw) begin
+                hudDrawingRequest = 1'b1;
+                hudRGB = score_rgb;
+            end else if (goal_draw) begin
+                hudDrawingRequest = 1'b1;
+                hudRGB = goal_rgb;
+            end else if (timer_draw) begin
+                hudDrawingRequest = 1'b1;
+                hudRGB = timer_rgb;
+            end else if (level_draw) begin
+                hudDrawingRequest = 1'b1;
+                hudRGB = level_rgb;
+            end else if (pop_draw) begin
+                hudDrawingRequest = 1'b1;
+                hudRGB = pop_rgb;
+            end
         end
     end
 

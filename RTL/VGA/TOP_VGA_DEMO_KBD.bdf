@@ -923,7 +923,7 @@ agreement for further details.
 	)
 )
 (symbol
-	(rect -5392 -128 -5128 144)
+	(rect -5392 -152 -5128 120)
 	(text "powerups_manager" (rect 5 0 99 12)(font "Arial" ))
 	(text "inst17" (rect 8 256 37 268)(font "Arial" ))
 	(port
@@ -2369,89 +2369,6 @@ agreement for further details.
 	(bus)
 )
 (connector
-	(text "speed_multiplier[1..0]" (rect -5120 -112 -5017 -95)(font "Intel Clear" ))
-	(pt -5128 -96)
-	(pt -5088 -96)
-	(bus)
-)
-(connector
-	(text "longer_radius_en" (rect -5120 -96 -5038 -79)(font "Intel Clear" ))
-	(pt -5128 -80)
-	(pt -5088 -80)
-)
-(connector
-	(text "passive_extra_time" (rect -5120 -80 -5028 -63)(font "Intel Clear" ))
-	(pt -5128 -64)
-	(pt -5080 -64)
-)
-(connector
-	(text "add_time_pulse" (rect -5120 -64 -5044 -47)(font "Intel Clear" ))
-	(pt -5128 -48)
-	(pt -5072 -48)
-)
-(connector
-	(text "slowdown_active" (rect -5120 -48 -5038 -31)(font "Intel Clear" ))
-	(pt -5128 -32)
-	(pt -5080 -32)
-)
-(connector
-	(text "clk" (rect -5424 -112 -5410 -95)(font "Intel Clear" ))
-	(pt -5392 -96)
-	(pt -5432 -96)
-)
-(connector
-	(text "resetN" (rect -5424 -96 -5394 -79)(font "Intel Clear" ))
-	(pt -5392 -80)
-	(pt -5432 -80)
-)
-(connector
-	(text "current_state[1..0]" (rect -5424 -80 -5338 -63)(font "Intel Clear" ))
-	(pt -5392 -64)
-	(pt -5432 -64)
-	(bus)
-)
-(connector
-	(text "start_level_pulse" (rect -5424 -64 -5341 -47)(font "Intel Clear" ))
-	(pt -5392 -48)
-	(pt -5432 -48)
-)
-(connector
-	(text "startOfFrame" (rect -5408 -48 -5345 -31)(font "Intel Clear" ))
-	(pt -5392 -32)
-	(pt -5432 -32)
-)
-(connector
-	(text "keyPad[3..0]" (rect -5424 -32 -5364 -15)(font "Intel Clear" ))
-	(pt -5392 -16)
-	(pt -5432 -16)
-	(bus)
-)
-(connector
-	(text "keyPadValid" (rect -5424 -16 -5363 1)(font "Intel Clear" ))
-	(pt -5392 0)
-	(pt -5432 0)
-)
-(connector
-	(text "speed_purchased" (rect -5424 0 -5342 17)(font "Intel Clear" ))
-	(pt -5392 16)
-	(pt -5432 16)
-)
-(connector
-	(text "radius_purchased" (rect -5424 16 -5342 33)(font "Intel Clear" ))
-	(pt -5392 32)
-	(pt -5432 32)
-)
-(connector
-	(text "time_purchased" (rect -5424 32 -5349 49)(font "Intel Clear" ))
-	(pt -5392 48)
-	(pt -5432 48)
-)
-(connector
-	(text "slowdown_purchased" (rect -5424 48 -5322 65)(font "Intel Clear" ))
-	(pt -5392 64)
-	(pt -5432 64)
-)
-(connector
 	(text "added_score[15..0]" (rect -4872 168 -4783 185)(font "Intel Clear" ))
 	(pt -4880 184)
 	(pt -4824 184)
@@ -2472,22 +2389,6 @@ agreement for further details.
 	(text "web_bomb_bonus_amount[15..0]" (rect -4104 -296 -3945 -279)(font "Intel Clear" ))
 	(pt -4112 -280)
 	(pt -4016 -280)
-	(bus)
-)
-(connector
-	(text "web_bomb_pulse" (rect -5120 -32 -5036 -15)(font "Intel Clear" ))
-	(pt -5128 -16)
-	(pt -5072 -16)
-)
-(connector
-	(text "score_pulse" (rect -5424 64 -5368 81)(font "Intel Clear" ))
-	(pt -5392 80)
-	(pt -5432 80)
-)
-(connector
-	(text "pulled_id[2..0]" (rect -5424 80 -5356 97)(font "Intel Clear" ))
-	(pt -5392 96)
-	(pt -5432 96)
 	(bus)
 )
 (connector
@@ -3029,6 +2930,105 @@ agreement for further details.
 	(text "play_enable" (rect -4656 856 -4596 873)(font "Intel Clear" ))
 	(pt -4592 872)
 	(pt -4664 872)
+)
+(connector
+	(text "speed_multiplier[1..0]" (rect -5120 -136 -5017 -119)(font "Intel Clear" ))
+	(pt -5128 -120)
+	(pt -5088 -120)
+	(bus)
+)
+(connector
+	(text "longer_radius_en" (rect -5120 -120 -5038 -103)(font "Intel Clear" ))
+	(pt -5128 -104)
+	(pt -5088 -104)
+)
+(connector
+	(text "passive_extra_time" (rect -5120 -104 -5028 -87)(font "Intel Clear" ))
+	(pt -5128 -88)
+	(pt -5080 -88)
+)
+(connector
+	(text "add_time_pulse" (rect -5120 -88 -5044 -71)(font "Intel Clear" ))
+	(pt -5128 -72)
+	(pt -5072 -72)
+)
+(connector
+	(text "slowdown_active" (rect -5120 -72 -5038 -55)(font "Intel Clear" ))
+	(pt -5128 -56)
+	(pt -5080 -56)
+)
+(connector
+	(text "clk" (rect -5424 -136 -5410 -119)(font "Intel Clear" ))
+	(pt -5392 -120)
+	(pt -5432 -120)
+)
+(connector
+	(text "resetN" (rect -5424 -120 -5394 -103)(font "Intel Clear" ))
+	(pt -5392 -104)
+	(pt -5432 -104)
+)
+(connector
+	(text "current_state[1..0]" (rect -5424 -104 -5338 -87)(font "Intel Clear" ))
+	(pt -5392 -88)
+	(pt -5432 -88)
+	(bus)
+)
+(connector
+	(text "start_level_pulse" (rect -5424 -88 -5341 -71)(font "Intel Clear" ))
+	(pt -5392 -72)
+	(pt -5432 -72)
+)
+(connector
+	(text "startOfFrame" (rect -5408 -72 -5345 -55)(font "Intel Clear" ))
+	(pt -5392 -56)
+	(pt -5432 -56)
+)
+(connector
+	(text "keyPad[3..0]" (rect -5424 -56 -5364 -39)(font "Intel Clear" ))
+	(pt -5392 -40)
+	(pt -5432 -40)
+	(bus)
+)
+(connector
+	(text "keyPadValid" (rect -5424 -40 -5363 -23)(font "Intel Clear" ))
+	(pt -5392 -24)
+	(pt -5432 -24)
+)
+(connector
+	(text "speed_purchased" (rect -5424 -24 -5342 -7)(font "Intel Clear" ))
+	(pt -5392 -8)
+	(pt -5432 -8)
+)
+(connector
+	(text "radius_purchased" (rect -5424 -8 -5342 9)(font "Intel Clear" ))
+	(pt -5392 8)
+	(pt -5432 8)
+)
+(connector
+	(text "time_purchased" (rect -5424 8 -5349 25)(font "Intel Clear" ))
+	(pt -5392 24)
+	(pt -5432 24)
+)
+(connector
+	(text "slowdown_purchased" (rect -5424 24 -5322 41)(font "Intel Clear" ))
+	(pt -5392 40)
+	(pt -5432 40)
+)
+(connector
+	(text "web_bomb_pulse" (rect -5120 -56 -5036 -39)(font "Intel Clear" ))
+	(pt -5128 -40)
+	(pt -5072 -40)
+)
+(connector
+	(text "score_pulse" (rect -5424 40 -5368 57)(font "Intel Clear" ))
+	(pt -5392 56)
+	(pt -5432 56)
+)
+(connector
+	(text "pulled_id[2..0]" (rect -5424 56 -5356 73)(font "Intel Clear" ))
+	(pt -5392 72)
+	(pt -5432 72)
+	(bus)
 )
 (junction (pt -5008 1136))
 (junction (pt -4160 1144))
