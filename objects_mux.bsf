@@ -21,9 +21,9 @@ agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 264 256)
+	(rect 16 16 264 320)
 	(text "objects_mux" (rect 5 0 55 12)(font "Arial" ))
-	(text "inst" (rect 8 224 20 236)(font "Arial" ))
+	(text "inst" (rect 8 288 20 300)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -102,6 +102,34 @@ agreement for further details.
 		(line (pt 0 192)(pt 16 192)(line_width 3))
 	)
 	(port
+		(pt 0 208)
+		(input)
+		(text "hudDrawingRequest" (rect 0 0 80 12)(font "Arial" ))
+		(text "hudDrawingRequest" (rect 21 203 101 215)(font "Arial" ))
+		(line (pt 0 208)(pt 16 208)(line_width 1))
+	)
+	(port
+		(pt 0 224)
+		(input)
+		(text "hudRGB[7..0]" (rect 0 0 55 12)(font "Arial" ))
+		(text "hudRGB[7..0]" (rect 21 219 76 231)(font "Arial" ))
+		(line (pt 0 224)(pt 16 224)(line_width 3))
+	)
+	(port
+		(pt 0 240)
+		(input)
+		(text "storeDrawingRequest" (rect 0 0 86 12)(font "Arial" ))
+		(text "storeDrawingRequest" (rect 21 235 107 247)(font "Arial" ))
+		(line (pt 0 240)(pt 16 240)(line_width 1))
+	)
+	(port
+		(pt 0 256)
+		(input)
+		(text "storeRGB[7..0]" (rect 0 0 61 12)(font "Arial" ))
+		(text "storeRGB[7..0]" (rect 21 251 82 263)(font "Arial" ))
+		(line (pt 0 256)(pt 16 256)(line_width 3))
+	)
+	(port
 		(pt 248 32)
 		(output)
 		(text "RGBOut[7..0]" (rect 0 0 55 12)(font "Arial" ))
@@ -109,6 +137,6 @@ agreement for further details.
 		(line (pt 248 32)(pt 232 32)(line_width 3))
 	)
 	(drawing
-		(rectangle (rect 16 16 232 224)(line_width 1))
+		(rectangle (rect 16 16 232 288)(line_width 1))
 	)
 )
