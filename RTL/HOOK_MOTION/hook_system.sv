@@ -10,7 +10,8 @@ module hook_system (
     input  logic [1:0]  speed_multiplier,
 	 input  logic 			longer_radius_en,
 	 input  logic 			slowdown_active,
-	 input  logic 			play_enable,
+    input  logic 			play_enable,
+    input  logic        scissors_pulse,
     input  logic [10:0] pixelX,
     input  logic [10:0] pixelY,
     
@@ -61,6 +62,7 @@ hook_motion_controller brain_inst (
     .speed_multiplier(speed_multiplier),
 	 .longer_radius_en(longer_radius_en),
      .slowdown_active(slowdown_active),
+     .scissors_pulse(scissors_pulse),
     .current_R(current_R_wire),
     .freeze_angle(freeze_angle_wire),
 	 .is_hooked(is_hooked)

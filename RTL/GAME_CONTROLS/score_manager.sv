@@ -50,8 +50,8 @@ module score_manager (
             end
             3'd2: added_score = (50 * pulled_weight * pulled_weight); // Robber
             3'd3: added_score = 16'd500;  // Maryjane
-            3'd4: begin // Riddler logic: 50% random score 99-999, 50% powerup pulse
-                if (rand_val[0]) begin
+            3'd4: begin // Riddler logic: 25% random score 99-999, 75% powerup pulse
+                if (rand_val[1:0] == 2'd0) begin
                     added_score = {6'd0, rand_val};
                 end else begin
                     added_score = 16'd0;

@@ -11,6 +11,7 @@ module hook_motion_controller (
 	 input  logic [1:0]	speed_multiplier,
 	 input  logic 			longer_radius_en, 
     input  logic        slowdown_active,
+    input  logic        scissors_pulse,
     
     output logic [10:0] current_R,
     output logic        freeze_angle,   	// Tells circular_motion to stop swinging
@@ -52,6 +53,11 @@ always_ff @(posedge clk or negedge resetN) begin
         play_enable_d <= play_enable;
         
         if (play_enable && !play_enable_d) begin	// New level started --> Reset hook state
+            state        <= ST_SWING;
+            current_R    <= base_radius;
+            freeze_angle <= 1'b0;
+            is_hooked    <= 1'b0;
+        end else if (scissors_pulse && state == ST_RETRACT && is_hooked) begin // Scissors cut!
             state        <= ST_SWING;
             current_R    <= base_radius;
             freeze_angle <= 1'b0;

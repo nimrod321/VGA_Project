@@ -35,7 +35,9 @@ module powerups_manager (
     input  logic        grant_powerup_pulse,
     output logic        web_bomb_pulse,
     output logic [1:0]  saved_powerup,
-    output logic [2:0]  slowdown_cooldown_sec
+    output logic [2:0]  slowdown_cooldown_sec,
+    input  logic        is_hooked,
+    output logic        scissors_pulse
 );
 
 
@@ -89,9 +91,11 @@ module powerups_manager (
             web_bomb_req    <= 1'b0;
             web_bomb_pulse  <= 1'b0;
             slowdown_cooldown <= 9'd0;
+            scissors_pulse  <= 1'b0;
         end else begin
             add_time_pulse <= 1'b0; // Default pulse to 0
             web_bomb_pulse <= 1'b0;
+            scissors_pulse <= 1'b0;
             random_counter <= random_counter + 1'b1;
             
             // Web Bomb Sync logic
@@ -111,8 +115,8 @@ module powerups_manager (
                             end else if (saved_powerup == 2'd2 && !web_bomb_req) begin
                                 web_bomb_req    <= 1'b1;
                                 saved_powerup   <= 2'd0;
-                            end else if (saved_powerup == 2'd3) begin
-                                // Scissors logic goes here later!
+                            end else if (saved_powerup == 2'd3 && is_hooked) begin
+                                scissors_pulse  <= 1'b1; // Trigger cut!
                                 saved_powerup   <= 2'd0;
                             end
                         end
