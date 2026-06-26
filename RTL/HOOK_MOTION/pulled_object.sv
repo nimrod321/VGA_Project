@@ -18,6 +18,7 @@ module pulled_object (
     input  logic        is_hooked,     // 1 when a collision happened
     input  logic [2:0]  id_code,       // Determines WHICH object is drawn (1 to 6)
     input  logic [1:0]  weight,        // Determines SCALE: 1=16x16, 2=32x32, 3=64x64
+    input  logic        web_bomb_pulse,
     
     // Outputs to the VGA Multiplexer
     output logic        pulledDrawingRequest,
@@ -124,6 +125,7 @@ module pulled_object (
     logic [1:0] last_seen_weight; // This is the VISUAL SCALE
     logic [2:0] last_seen_id;
     logic [1:0] pulled_visual_weight; // Latched visual scale!
+    logic       web_bomb_triggered;
     
     // Calculate the Physics Weight that gets exported to the Hook System!
     logic [1:0] physics_weight_calc;
@@ -150,6 +152,7 @@ module pulled_object (
             last_seen_weight <= 2'd0;
             last_seen_id <= 3'd0;
             pulled_visual_weight <= 2'd0;
+            web_bomb_triggered <= 1'b0;
         end else if (!play_enable) begin
             pulledRGBout         <= 8'h00;
             pulledDrawingRequest <= 1'b0;
@@ -160,6 +163,7 @@ module pulled_object (
             last_seen_weight <= 2'd0;
             last_seen_id <= 3'd0;
             pulled_visual_weight <= 2'd0;
+            web_bomb_triggered <= 1'b0;
         end 
         else begin
             is_hooked_d <= is_hooked;
@@ -171,7 +175,11 @@ module pulled_object (
             end
             
             // Latch the exact object we hit on the rising edge of the hook!
-            if (is_hooked && !is_hooked_d) begin
+            if (web_bomb_pulse) begin
+                pulled_weight <= 2'd1;
+                web_bomb_triggered <= 1'b1;
+            end
+            else if (is_hooked && !is_hooked_d && !web_bomb_triggered) begin
                 pulled_weight <= physics_weight_calc; // Output the physics weight to the Hook!
                 pulled_id <= last_seen_id;
                 pulled_visual_weight <= last_seen_weight; // Lock in the visual size!
@@ -180,6 +188,7 @@ module pulled_object (
                 pulled_weight <= 2'd0; // Empty hook = 0 weight
                 pulled_id <= 3'd0;
                 pulled_visual_weight <= 2'd0;
+                web_bomb_triggered <= 1'b0;
             end
             
             // Generate score pulse exactly when hook fully retracts (falling edge)

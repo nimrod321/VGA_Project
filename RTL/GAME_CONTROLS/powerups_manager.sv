@@ -32,12 +32,16 @@ module powerups_manager (
     output logic        slowdown_active,
     
     // Powerups Unlocking and Triggering
-    input  logic        grant_powerup_pulse,
-    output logic        web_bomb_pulse,
-    output logic [1:0]  saved_powerup,
-    output logic [2:0]  slowdown_cooldown_sec,
-    input  logic        is_hooked,
-    output logic        scissors_pulse
+    // Inputs
+    input  logic        grant_powerup_pulse,    // Pulse to grant a random powerup (from hook Riddler grab)
+    input  logic        is_hooked,              // Tells powerup manager if an object is currently hooked
+    input  logic        web_bomb_riddler_pulse, // Pulse indicating a Riddler was caught in a Web Bomb explosion
+    input  logic        hook_in_flight,         // Hook flight status (not in swing state)
+    // Outputs
+    output logic        web_bomb_pulse,         // Detonation pulse to trigger the web bomb
+    output logic [1:0]  saved_powerup,          // Stored powerup inventory (0=none, 1=time, 2=web bomb, 3=scissors)
+    output logic [2:0]  slowdown_cooldown_sec,  // Slowdown cooldown value in seconds (0 to 5) shown on HUD
+    output logic        scissors_pulse          // Trigger pulse to cut the line
 );
 
 
@@ -112,8 +116,8 @@ module powerups_manager (
                             if (saved_powerup == 2'd1) begin
                                 add_time_pulse  <= 1'b1; // Added Time
                                 saved_powerup   <= 2'd0;
-                            end else if (saved_powerup == 2'd2 && !web_bomb_req) begin
-                                web_bomb_req    <= 1'b1;
+                            end else if (saved_powerup == 2'd2 && !web_bomb_req && hook_in_flight) begin
+                                web_bomb_req    <= 1'b1;	// Trigger web_bomb
                                 saved_powerup   <= 2'd0;
                             end else if (saved_powerup == 2'd3 && is_hooked) begin
                                 scissors_pulse  <= 1'b1; // Trigger cut!
@@ -133,7 +137,7 @@ module powerups_manager (
             end
             
             // Riddler Capture Logic -> Gives Random Powerup
-            if (grant_powerup_pulse) begin
+            if (grant_powerup_pulse || web_bomb_riddler_pulse) begin
                 if (random_counter[1:0] == 2'd0) saved_powerup <= 2'd1; // Added Time
                 else if (random_counter[1:0] == 2'd1) saved_powerup <= 2'd2; // Web Bomb
                 else saved_powerup <= 2'd3; // Scissors

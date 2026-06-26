@@ -222,7 +222,8 @@ module hud_drawer (
     end
     
     logic draw_hud_icon;
-    assign draw_hud_icon = (saved_powerup != 2'd0 &&
+    assign draw_hud_icon = (current_state == 2'd1 && // Only draw in PLAY state (hidden in STORE)
+                            saved_powerup != 2'd0 &&
                             pixelX >= 250 && pixelX < 282 &&
                             pixelY >= 16 && pixelY < 48 &&
                             active_icon_rgb != 8'hFF); // Skip white background

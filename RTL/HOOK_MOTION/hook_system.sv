@@ -12,6 +12,7 @@ module hook_system (
 	 input  logic 			slowdown_active,
     input  logic 			play_enable,
     input  logic        scissors_pulse,
+    input  logic        web_bomb_pulse,
     input  logic [10:0] pixelX,
     input  logic [10:0] pixelY,
     
@@ -19,7 +20,10 @@ module hook_system (
     output logic [10:0] hook_y,
     output logic        hookDrawingRequest,
     output logic [7:0]  hookRGB,
-	 output logic 			is_hooked
+	 output logic 			is_hooked,
+    output logic        hook_in_flight,
+    output logic        hook_is_shooting,
+    output logic [5:0]  web_bomb_timer
 );
 
 
@@ -63,9 +67,13 @@ hook_motion_controller brain_inst (
 	 .longer_radius_en(longer_radius_en),
      .slowdown_active(slowdown_active),
      .scissors_pulse(scissors_pulse),
+     .web_bomb_pulse(web_bomb_pulse),
     .current_R(current_R_wire),
     .freeze_angle(freeze_angle_wire),
-	 .is_hooked(is_hooked)
+	 .is_hooked(is_hooked),
+    .hook_in_flight(hook_in_flight),
+    .hook_is_shooting(hook_is_shooting),
+    .web_bomb_timer(web_bomb_timer)
 );
 
 // 2. The Physics

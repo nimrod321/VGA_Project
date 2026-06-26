@@ -5,24 +5,33 @@
 module SpideyObjectsBitMap #(
     parameter int NUM_TOTAL_OBJECTS = 15 // How many items to spawn per level
 )(  
+    // Clock and Reset
     input  logic        clk,
     input  logic        resetN,
     input  logic        play_enable,
-    input  logic [10:0] offsetX,         // offset from top left position of the play area
-    input  logic [10:0] offsetY,
-    input  logic        InsideRectangle, // input that the pixel is within the main play area
+    
+    // VGA Beam Coordinates
+    input  logic [10:0] pixelX,         
+    input  logic [10:0] pixelY,
+    
+    // Game Events and Statuses
     input  logic        start_level,     // Pulse to generate level
     input  logic        startOfFrame,    // Trigger to update animation/movement
     input  logic [3:0]  current_level,   // From game_state_controller
     input  logic        collision_Web_Object, // Collision input
+    input  logic        hook_is_shooting,     // High only during hook shoot phase
 	
-    // Web Bomb Interface
+    // Hook collision & Web Bomb Coordinates and Triggers
     input  logic [10:0] hook_x,
     input  logic [10:0] hook_y,
     input  logic        web_bomb_pulse,
+
+    // Web Bomb Outputs
     output logic        web_bomb_bonus_pulse,
-    output logic [15:0] web_bomb_bonus_amount,
+    output logic signed [15:0] web_bomb_bonus_amount,
+    output logic        web_bomb_riddler_pulse, // High when Riddler is caught in Web Bomb explosion
     
+    // Outputs to VGA Multiplexer
     output logic        objectsDrawingRequest,  // output that the pixel should be displayed
     output logic [7:0]  objectsRGB,          	// rgb value from the bitmap 
     output logic [2:0]  id_code,
@@ -100,6 +109,7 @@ module SpideyObjectsBitMap #(
             web_explosion_timer <= 0;
             web_bomb_bonus_pulse <= 1'b0;
             web_bomb_bonus_amount <= 0;
+            web_bomb_riddler_pulse <= 1'b0;
             for (int i=0; i<15; i++) begin
                 obj_active[i] <= 1'b0;
                 obj_dir[i] <= 1'b0;
@@ -118,6 +128,7 @@ module SpideyObjectsBitMap #(
             web_explosion_timer <= 0;
             web_bomb_bonus_pulse <= 1'b0;
             web_bomb_bonus_amount <= 0;
+            web_bomb_riddler_pulse <= 1'b0;
             for (int i=0; i<15; i++) begin
                 obj_active[i] <= 1'b0;
                 obj_dir[i] <= 1'b0;
@@ -131,8 +142,10 @@ module SpideyObjectsBitMap #(
             objectsDrawingRequest <= 1'b0;
             id_code <= 3'd0;
             weight <= 2'd0;
+            web_bomb_bonus_pulse <= 1'b0;
+            web_bomb_riddler_pulse <= 1'b0;
 
-            if (state == PLAY && InsideRectangle) begin
+            if (state == PLAY) begin
                 logic hit_found;
                 logic [3:0] hit_index;
                 hit_found = 1'b0;
@@ -143,8 +156,8 @@ module SpideyObjectsBitMap #(
                     if (obj_active[i]) begin
                         int size;
                         size = (obj_scale[i] == 0) ? 32 : ((obj_scale[i] == 1) ? 64 : 128);
-                        if (offsetX >= obj_x[i] && offsetX < obj_x[i] + size &&
-                            offsetY >= obj_y[i] && offsetY < obj_y[i] + size) begin
+                        if (pixelX >= obj_x[i] && pixelX < obj_x[i] + size &&
+                            pixelY >= obj_y[i] && pixelY < obj_y[i] + size) begin
                             hit_found = 1'b1;
                             hit_index = i[3:0];
                         end
@@ -159,8 +172,8 @@ module SpideyObjectsBitMap #(
                     logic [7:0]  hit_color;
                     logic [7:0]  color_cop, color_robber, color_maryjane, color_riddler, color_goblin;
                     
-                    local_x = offsetX - obj_x[hit_index];
-                    local_y = offsetY - obj_y[hit_index];
+                    local_x = pixelX - obj_x[hit_index];
+                    local_y = pixelY - obj_y[hit_index];
                     
                     if (obj_scale[hit_index] == 0) begin
                         tex_x = local_x[4:0]; tex_y = local_y[4:0];
@@ -204,12 +217,12 @@ module SpideyObjectsBitMap #(
                 if (web_explosion_timer > 0) begin
                     // Draw massive expanding white web explosion
                     int dx, dy, dist_sq;
-                    dx = offsetX - web_explosion_x;
-                    dy = offsetY - web_explosion_y;
+                    dx = pixelX - web_explosion_x;
+                    dy = pixelY - web_explosion_y;
                     dist_sq = dx*dx + dy*dy;
                     if (dist_sq < (30 - web_explosion_timer)*(30 - web_explosion_timer) * 4) begin
                         // Checkered pattern for "web" look
-                        if ((offsetX[2] ^ offsetY[2]) == 1'b1) begin
+                        if ((pixelX[2] ^ pixelY[2]) == 1'b1) begin
                             objectsRGB <= 8'b111_111_11; // White web
                             objectsDrawingRequest <= 1'b1;
                             id_code <= 3'd0;
@@ -219,8 +232,8 @@ module SpideyObjectsBitMap #(
                 end else if (explosion_timer > 0) begin
                     // Draw massive expanding orange/yellow explosion
                     int dx, dy, dist_sq;
-                    dx = offsetX - bomb_x;
-                    dy = offsetY - bomb_y;
+                    dx = pixelX - bomb_x;
+                    dy = pixelY - bomb_y;
                     dist_sq = dx*dx + dy*dy;
                     if (dist_sq < (30 - explosion_timer)*(30 - explosion_timer) * 4) begin
                         objectsRGB <= (explosion_timer[2]) ? 8'b111_111_00 : 8'b111_000_00; // Flashing yellow/red
@@ -230,8 +243,8 @@ module SpideyObjectsBitMap #(
                     end
                 end else if (bomb_active) begin
                     int dx, dy, dist_sq;
-                    dx = offsetX - bomb_x;
-                    dy = offsetY - bomb_y;
+                    dx = pixelX - bomb_x;
+                    dy = pixelY - bomb_y;
                     dist_sq = dx*dx + dy*dy;
                     if (dist_sq < 64) begin // Radius 8
                         objectsRGB <= 8'b111_000_00; // Solid red circle
@@ -316,41 +329,44 @@ module SpideyObjectsBitMap #(
                         state <= INIT_CLEAR;
                     end
                     
-                    // GOBLIN BOMB AND MOVEMENT
-                    if (startOfFrame) begin
-                        web_bomb_bonus_pulse <= 1'b0; // Default off
-                        
-                        // WEB BOMB PHYSICS
-                        if (web_bomb_pulse) begin
-                            logic [15:0] local_bonus;
-                            local_bonus = 0;
-                            for (int k=0; k<15; k++) begin
-                                if (obj_active[k] && obj_type[k] != 3'd5) begin
-                                    int size_k;
-                                    size_k = (obj_scale[k] == 0) ? 32 : ((obj_scale[k] == 1) ? 64 : 128);
-                                    if (obj_x[k] + size_k > hook_x - 64 && obj_x[k] < hook_x + 64 &&
-                                        obj_y[k] + size_k > hook_y - 64 && obj_y[k] < hook_y + 64) begin
-                                        obj_active[k] <= 1'b0; // Destroy it!
-                                        // Sum up the bonus!
-                                        case (obj_type[k])
-                                            3'd1: ; // Ignore cops so we don't penalize bonus!
-                                            3'd2: local_bonus = local_bonus + (50 * (obj_scale[k]+1) * (obj_scale[k]+1));
-                                            3'd3: local_bonus = local_bonus + 500;
-                                            3'd4: local_bonus = local_bonus + 1000;
-                                            default: ;
-                                        endcase
-                                    end
+                    // WEB BOMB DETONATION (Evaluated on the exact clock cycle web_bomb_pulse is active)
+                    if (web_bomb_pulse) begin
+                        logic signed [15:0] local_bonus;
+                        local_bonus = 0;
+                        for (int k=0; k<15; k++) begin
+                            if (obj_active[k]) begin
+                                int size_k;
+                                size_k = (obj_scale[k] == 0) ? 32 : ((obj_scale[k] == 1) ? 64 : 128);
+                                if (obj_x[k] + size_k > hook_x - 64 && obj_x[k] < hook_x + 64 &&
+                                    obj_y[k] + size_k > hook_y - 64 && obj_y[k] < hook_y + 64) begin
+                                    obj_active[k] <= 1'b0; // Destroy it!
+                                    // Sum up the bonus!
+                                    case (obj_type[k])
+                                        3'd1: begin // Cop penalty subtraction (can go negative)
+                                            local_bonus = local_bonus - $signed(50 * (obj_scale[k]+1) * (obj_scale[k]+1));
+                                        end
+                                        3'd2: local_bonus = local_bonus + $signed(50 * (obj_scale[k]+1) * (obj_scale[k]+1)); // Robber
+                                        3'd3: local_bonus = local_bonus + 16'sd500; // Maryjane
+                                        3'd4: web_bomb_riddler_pulse <= 1'b1;	// Riddler caught -> pulse rewards, 0 score
+                                        3'd5: local_bonus = local_bonus + 16'sd1000; // Goblin
+                                        default: ;
+                                    endcase
                                 end
                             end
-                            web_bomb_bonus_amount <= local_bonus;
-                            web_bomb_bonus_pulse <= 1'b1;
-                            
-                            // Trigger Web Explosion Graphics
-                            web_explosion_active <= 1'b1;
-                            web_explosion_timer <= 30;
-                            web_explosion_x <= hook_x;
-                            web_explosion_y <= hook_y;
-                        end else if (web_explosion_timer > 0) begin
+                        end
+                        web_bomb_bonus_amount <= local_bonus;
+                        web_bomb_bonus_pulse <= 1'b1;
+                        
+                        // Trigger Web Explosion Graphics
+                        web_explosion_active <= 1'b1;
+                        web_explosion_timer <= 30;
+                        web_explosion_x <= hook_x;
+                        web_explosion_y <= hook_y;
+                    end
+
+                    // GOBLIN BOMB AND MOVEMENT
+                    if (startOfFrame) begin
+                        if (web_explosion_timer > 0) begin
                             web_explosion_timer <= web_explosion_timer - 1;
                         end
                         
@@ -412,14 +428,14 @@ module SpideyObjectsBitMap #(
                         end
                     end
                     
-                    if (collision_Web_Object && InsideRectangle) begin
+                    if (collision_Web_Object && hook_is_shooting) begin
                         // Hook collision
                         for (int i=0; i<15; i++) begin
                             if (obj_active[i]) begin
                                 int size;
                                 size = (obj_scale[i] == 0) ? 32 : ((obj_scale[i] == 1) ? 64 : 128);
-                                if (offsetX >= obj_x[i] && offsetX < obj_x[i] + size &&
-                                    offsetY >= obj_y[i] && offsetY < obj_y[i] + size) begin
+                                if (pixelX >= obj_x[i] && pixelX < obj_x[i] + size &&
+                                    pixelY >= obj_y[i] && pixelY < obj_y[i] + size) begin
                                     obj_active[i] <= 1'b0;
                                 end
                             end

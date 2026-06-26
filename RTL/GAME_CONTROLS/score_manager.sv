@@ -13,7 +13,7 @@ module score_manager (
     
     // Web Bomb bonus inputs from SpideyObjectsBitMap
     input  logic        web_bomb_bonus_pulse,
-    input  logic [15:0] web_bomb_bonus_amount,
+    input  logic signed [15:0] web_bomb_bonus_amount,
     
     // Outputs
     output logic [15:0] score,
@@ -38,32 +38,44 @@ module score_manager (
     
     logic subtract_flag;
     logic grant_powerup_flag;
-    assign is_penalty = subtract_flag;
 
+    logic [15:0] base_added_score;
     always_comb begin
         subtract_flag = 1'b0;
         grant_powerup_flag = 1'b0;
         case (pulled_id)
             3'd1: begin 
-                added_score = (50 * pulled_weight * pulled_weight); // Cop penalty
+                base_added_score = (50 * pulled_weight * pulled_weight); // Cop penalty
                 subtract_flag = 1'b1;
             end
-            3'd2: added_score = (50 * pulled_weight * pulled_weight); // Robber
-            3'd3: added_score = 16'd500;  // Maryjane
+            3'd2: base_added_score = (50 * pulled_weight * pulled_weight); // Robber
+            3'd3: base_added_score = 16'd500;  // Maryjane
             3'd4: begin // Riddler logic: 25% random score 99-999, 75% powerup pulse
                 if (rand_val[1:0] == 2'd0) begin
-                    added_score = {6'd0, rand_val};
+                    base_added_score = {6'd0, rand_val};
                 end else begin
-                    added_score = 16'd0;
+                    base_added_score = 16'd0;
                     grant_powerup_flag = 1'b1;
                 end
             end
-            3'd5: added_score = 16'd1000; // Goblin
-            default: added_score = 16'd0;
+            3'd5: base_added_score = 16'd1000; // Goblin
+            default: base_added_score = 16'd0;
         endcase
     end
     
-    logic [15:0] accumulated_web_bonus;
+    logic signed [15:0] accumulated_web_bonus;
+    
+    logic signed [16:0] base_change;
+    assign base_change = subtract_flag ? -$signed({1'b0, base_added_score}) : $signed({1'b0, base_added_score});
+    
+    logic signed [16:0] net_change;
+    assign net_change = base_change + $signed(accumulated_web_bonus);
+    
+    logic [15:0] abs_change;
+    assign abs_change = (net_change < 0) ? -net_change : net_change;
+    
+    assign is_penalty = (net_change < 0);
+    assign added_score = abs_change;
     
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
@@ -87,12 +99,10 @@ module score_manager (
                         grant_powerup_pulse <= 1'b1;
                     end
                     
-                    if (subtract_flag) begin
-                        // If penalty, still add the bonus!
-                        score <= (score + accumulated_web_bonus >= added_score) ? 
-                                 (score + accumulated_web_bonus - added_score) : 16'd0;
+                    if (net_change < 0) begin
+                        score <= (score >= abs_change) ? (score - abs_change) : 16'd0;
                     end else begin
-                        score <= score + added_score + accumulated_web_bonus;
+                        score <= score + abs_change;
                     end
                     accumulated_web_bonus <= 0; // Clear after applying
                 end else if (deduct_score_pulse) begin

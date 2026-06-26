@@ -12,10 +12,14 @@ module hook_motion_controller (
 	 input  logic 			longer_radius_en, 
     input  logic        slowdown_active,
     input  logic        scissors_pulse,
+    input  logic        web_bomb_pulse,
     
     output logic [10:0] current_R,
     output logic        freeze_angle,   	// Tells circular_motion to stop swinging
-	 output logic 			is_hooked			// Tells the pulled_object it is hooked
+	 output logic 			is_hooked,			// Tells the pulled_object it is hooked
+    output logic        hook_in_flight,
+    output logic        hook_is_shooting,
+    output logic [5:0]  web_bomb_timer
 );
 
 // Constants
@@ -30,6 +34,7 @@ logic [4:0] shoot_speed;
 logic [4:0] pull_speed;
 logic [8:0]	base_radius;	 
 logic play_enable_d;
+logic [5:0] pause_timer;
 
 logic [4:0] calc_shoot;
 logic [4:0] calc_pull;
@@ -42,6 +47,10 @@ assign pull_speed  = (calc_pull == 0)  ? 5'd1 : calc_pull;
 
 assign base_radius = INITIAL_R << longer_radius_en;
 
+assign hook_in_flight = (state != ST_SWING);
+assign hook_is_shooting = (state == ST_SHOOT);
+assign web_bomb_timer = pause_timer;
+
 always_ff @(posedge clk or negedge resetN) begin
     if (!resetN) begin
         state        <= ST_SWING;
@@ -49,6 +58,7 @@ always_ff @(posedge clk or negedge resetN) begin
         freeze_angle <= 1'b0;
 		  is_hooked    <= 1'b0;
         play_enable_d <= 1'b0;
+        pause_timer  <= 6'd0;
     end else begin
         play_enable_d <= play_enable;
         
@@ -57,11 +67,17 @@ always_ff @(posedge clk or negedge resetN) begin
             current_R    <= base_radius;
             freeze_angle <= 1'b0;
             is_hooked    <= 1'b0;
+            pause_timer  <= 6'd0;
         end else if (scissors_pulse && state == ST_RETRACT && is_hooked) begin // Scissors cut!
             state        <= ST_SWING;
             current_R    <= base_radius;
             freeze_angle <= 1'b0;
             is_hooked    <= 1'b0;
+            pause_timer  <= 6'd0;
+        end else if (web_bomb_pulse && (state == ST_SHOOT || state == ST_RETRACT)) begin // Web Bomb trigger!
+            state        <= ST_RETRACT;
+            is_hooked    <= 1'b1;
+            pause_timer  <= 6'd60;
         end else begin
         case (state)
             
@@ -102,13 +118,17 @@ always_ff @(posedge clk or negedge resetN) begin
             // --------------------------------
                 freeze_angle <= 1'b1;
                 if (startOfFrame && play_enable) begin
-                    current_R <= current_R - pull_speed;
-                    
-                    // Transition back to swing when fully retracted
-                    if (current_R <= base_radius) begin
-                        current_R <= base_radius; // Snap exactly to base radius
-                        state     <= ST_SWING;
-								is_hooked <= 1'b0;
+                    if (pause_timer > 0) begin
+                        pause_timer <= pause_timer - 1'b1;
+                    end else begin
+                        current_R <= current_R - pull_speed;
+                        
+                        // Transition back to swing when fully retracted
+                        if (current_R <= base_radius) begin
+                            current_R <= base_radius; // Snap exactly to base radius
+                            state     <= ST_SWING;
+									is_hooked <= 1'b0;
+                        end
                     end
                 end
             end
