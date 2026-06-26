@@ -34,7 +34,7 @@ module store_drawer (
     logic [13:0] title_addr;
     
     localparam int TITLE_X = 192; // (640 - 256) / 2
-    localparam int TITLE_Y = 50;  // Up on the screen
+    localparam int TITLE_Y = 10;  // Up on the screen
     
     assign title_addr = ((pixelY - TITLE_Y) * 256) + (pixelX - TITLE_X);
     
@@ -63,7 +63,9 @@ module store_drawer (
     logic [7:0] icon_speed_rgb, icon_time_rgb, icon_radius_rgb, icon_slow_rgb;
     logic [9:0] icon_speed_addr, icon_time_addr, icon_radius_addr, icon_slow_addr;
     
-    localparam int ICON_Y = 175;
+    localparam int ICON_Y = 270;
+    localparam int PRICE_Y = 320;
+    localparam int TEXT_Y = 355;
     
     assign icon_speed_addr  = ((pixelY - ICON_Y) << 5) + (pixelX - 90);
     assign icon_time_addr   = ((pixelY - ICON_Y) << 5) + (pixelX - 230);
@@ -83,10 +85,10 @@ module store_drawer (
         rom_icon_slow (.clock0(clk), .address_a(icon_slow_addr), .q_a(icon_slow_rgb));
         
     logic draw_icon_speed, draw_icon_time, draw_icon_radius, draw_icon_slow;
-    assign draw_icon_speed  = (current_state == 2'd2 && pixelX >= 90 && pixelX < 122 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && icon_speed_rgb != 8'h00);
-    assign draw_icon_time   = (current_state == 2'd2 && pixelX >= 230 && pixelX < 262 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && icon_time_rgb != 8'h00);
-    assign draw_icon_radius = (current_state == 2'd2 && pixelX >= 370 && pixelX < 402 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && icon_radius_rgb != 8'h00);
-    assign draw_icon_slow   = (current_state == 2'd2 && pixelX >= 510 && pixelX < 542 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && icon_slow_rgb != 8'h00);
+    assign draw_icon_speed  = (current_state == 2'd2 && pixelX >= 90 && pixelX < 122 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && !bought_speed && icon_speed_rgb != 8'hFF);
+    assign draw_icon_time   = (current_state == 2'd2 && pixelX >= 230 && pixelX < 262 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && !bought_time && icon_time_rgb != 8'hFF);
+    assign draw_icon_radius = (current_state == 2'd2 && pixelX >= 370 && pixelX < 402 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && !bought_radius && icon_radius_rgb != 8'hFF);
+    assign draw_icon_slow   = (current_state == 2'd2 && pixelX >= 510 && pixelX < 542 && pixelY >= ICON_Y && pixelY < ICON_Y + 32 && !bought_slowdown && icon_slow_rgb != 8'hFF);
 
     // -------------------------------------------------------------------------
     // Instantiate price display units & text labels
@@ -97,17 +99,17 @@ module store_drawer (
     logic [11:0] text_addr_radius;
     logic [11:0] text_addr_slow;
     
-    assign text_addr_speed  = ((pixelY - 260) * 128) + (pixelX - 50);
-    assign text_addr_time   = ((pixelY - 260) * 128) + (pixelX - 190);
-    assign text_addr_radius = ((pixelY - 260) * 128) + (pixelX - 330);
-    assign text_addr_slow   = ((pixelY - 260) * 128) + (pixelX - 470);
+    assign text_addr_speed  = ((pixelY - TEXT_Y) * 128) + (pixelX - 50);
+    assign text_addr_time   = ((pixelY - TEXT_Y) * 128) + (pixelX - 190);
+    assign text_addr_radius = ((pixelY - TEXT_Y) * 128) + (pixelX - 330);
+    assign text_addr_slow   = ((pixelY - TEXT_Y) * 128) + (pixelX - 470);
     
     logic [0:0] bit_speed, bit_time, bit_radius, bit_slow;
     
     // 1. SPEED
     logic        speed_draw;
     logic [7:0]  speed_rgb;
-    number_display_unit #(.NUM_DIGITS(3), .DIGIT_COLOR(8'h1C), .START_X(90), .START_Y(220), .SCALE_BY_2(1'b0)) speed_disp (
+    number_display_unit #(.NUM_DIGITS(3), .DIGIT_COLOR(8'h1F), .START_X(90), .START_Y(PRICE_Y), .SCALE_BY_2(1'b0)) speed_disp (
         .clk(clk), .resetN(resetN), .pixelX(pixelX), .pixelY(pixelY),
         .value(speed_price), .enable(current_state == 2'd2 && !bought_speed),
         .drawingRequest(speed_draw), .RGBout(speed_rgb)
@@ -115,12 +117,12 @@ module store_drawer (
     altsyncram #(.operation_mode("ROM"), .width_a(1), .widthad_a(12), .numwords_a(4096), .init_file("MIF/store_text_speed.mif"), .intended_device_family("Cyclone V"))
         rom_speed (.clock0(clk), .address_a(text_addr_speed), .q_a(bit_speed));
     logic draw_text_speed;
-    assign draw_text_speed = (current_state == 2'd2 && !bought_speed && pixelX >= 50 && pixelX < 178 && pixelY >= 260 && pixelY < 292 && bit_speed == 1'b1);
-
+    assign draw_text_speed = (current_state == 2'd2 && !bought_speed && pixelX >= 50 && pixelX < 178 && pixelY >= TEXT_Y && pixelY < TEXT_Y + 32 && bit_speed == 1'b1);
+ 
     // 2. TIME
     logic        time_draw;
     logic [7:0]  time_rgb;
-    number_display_unit #(.NUM_DIGITS(3), .DIGIT_COLOR(8'hFC), .START_X(230), .START_Y(220), .SCALE_BY_2(1'b0)) time_disp (
+    number_display_unit #(.NUM_DIGITS(3), .DIGIT_COLOR(8'h1F), .START_X(230), .START_Y(PRICE_Y), .SCALE_BY_2(1'b0)) time_disp (
         .clk(clk), .resetN(resetN), .pixelX(pixelX), .pixelY(pixelY),
         .value(time_price), .enable(current_state == 2'd2 && !bought_time),
         .drawingRequest(time_draw), .RGBout(time_rgb)
@@ -128,12 +130,12 @@ module store_drawer (
     altsyncram #(.operation_mode("ROM"), .width_a(1), .widthad_a(12), .numwords_a(4096), .init_file("MIF/store_text_time.mif"), .intended_device_family("Cyclone V"))
         rom_time (.clock0(clk), .address_a(text_addr_time), .q_a(bit_time));
     logic draw_text_time;
-    assign draw_text_time = (current_state == 2'd2 && !bought_time && pixelX >= 190 && pixelX < 318 && pixelY >= 260 && pixelY < 292 && bit_time == 1'b1);
-
+    assign draw_text_time = (current_state == 2'd2 && !bought_time && pixelX >= 190 && pixelX < 318 && pixelY >= TEXT_Y && pixelY < TEXT_Y + 32 && bit_time == 1'b1);
+ 
     // 3. RADIUS
     logic        radius_draw;
     logic [7:0]  radius_rgb;
-    number_display_unit #(.NUM_DIGITS(3), .DIGIT_COLOR(8'h1F), .START_X(370), .START_Y(220), .SCALE_BY_2(1'b0)) radius_disp (
+    number_display_unit #(.NUM_DIGITS(3), .DIGIT_COLOR(8'h1F), .START_X(370), .START_Y(PRICE_Y), .SCALE_BY_2(1'b0)) radius_disp (
         .clk(clk), .resetN(resetN), .pixelX(pixelX), .pixelY(pixelY),
         .value(radius_price), .enable(current_state == 2'd2 && !bought_radius),
         .drawingRequest(radius_draw), .RGBout(radius_rgb)
@@ -141,12 +143,12 @@ module store_drawer (
     altsyncram #(.operation_mode("ROM"), .width_a(1), .widthad_a(12), .numwords_a(4096), .init_file("MIF/store_text_radius.mif"), .intended_device_family("Cyclone V"))
         rom_radius (.clock0(clk), .address_a(text_addr_radius), .q_a(bit_radius));
     logic draw_text_radius;
-    assign draw_text_radius = (current_state == 2'd2 && !bought_radius && pixelX >= 330 && pixelX < 458 && pixelY >= 260 && pixelY < 292 && bit_radius == 1'b1);
-
+    assign draw_text_radius = (current_state == 2'd2 && !bought_radius && pixelX >= 330 && pixelX < 458 && pixelY >= TEXT_Y && pixelY < TEXT_Y + 32 && bit_radius == 1'b1);
+ 
     // 4. SLOWDOWN
     logic        slow_draw;
     logic [7:0]  slow_rgb;
-    number_display_unit #(.NUM_DIGITS(3), .DIGIT_COLOR(8'hE0), .START_X(510), .START_Y(220), .SCALE_BY_2(1'b0)) slow_disp (
+    number_display_unit #(.NUM_DIGITS(3), .DIGIT_COLOR(8'h1F), .START_X(510), .START_Y(PRICE_Y), .SCALE_BY_2(1'b0)) slow_disp (
         .clk(clk), .resetN(resetN), .pixelX(pixelX), .pixelY(pixelY),
         .value(slow_price), .enable(current_state == 2'd2 && !bought_slowdown),
         .drawingRequest(slow_draw), .RGBout(slow_rgb)
@@ -154,7 +156,7 @@ module store_drawer (
     altsyncram #(.operation_mode("ROM"), .width_a(1), .widthad_a(12), .numwords_a(4096), .init_file("MIF/store_text_slow.mif"), .intended_device_family("Cyclone V"))
         rom_slow (.clock0(clk), .address_a(text_addr_slow), .q_a(bit_slow));
     logic draw_text_slow;
-    assign draw_text_slow = (current_state == 2'd2 && !bought_slowdown && pixelX >= 470 && pixelX < 598 && pixelY >= 260 && pixelY < 292 && bit_slow == 1'b1);
+    assign draw_text_slow = (current_state == 2'd2 && !bought_slowdown && pixelX >= 470 && pixelX < 598 && pixelY >= TEXT_Y && pixelY < TEXT_Y + 32 && bit_slow == 1'b1);
 
 
     // Combine drawing requests

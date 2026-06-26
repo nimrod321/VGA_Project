@@ -20,6 +20,7 @@ module NumbersBitMap	(
 
 parameter  logic	[7:0] digit_color = 8'hff ; //set the color of the digit 
 parameter  bit          SCALE_BY_2 = 1'b0 ;  // 1 = 32x64, 0 = 16x32
+parameter  bit          SHRINK_BY_2 = 1'b0 ; // 1 = 8x16, 0 = 16x32
 
 
 bit [0:15] [0:31] [0:15] number_bitmap  = {
@@ -576,6 +577,8 @@ begin
 		if (InsideRectangle == 1'b1 ) begin
 			if (SCALE_BY_2)
 				drawingRequest <= (number_bitmap[digit][offsetY>>1][offsetX>>1]);
+			else if (SHRINK_BY_2)
+				drawingRequest <= (number_bitmap[digit][offsetY<<1][offsetX<<1]);
 			else
 				drawingRequest <= (number_bitmap[digit][offsetY][offsetX]);
 		end

@@ -19,23 +19,45 @@ module score_manager (
     output logic [15:0] score,
     output logic        threshold_met,
     output logic [15:0] added_score,
-    output logic [15:0] threshold
+    output logic [15:0] threshold,
+    output logic        grant_powerup_pulse,
+    output logic        is_penalty
 );
 
-    assign threshold = current_level * 100;
+    assign threshold = 550 + (current_level * 500);
     assign threshold_met = (score >= threshold);
     
+    logic [9:0] rand_val;
+    always_ff @(posedge clk or negedge resetN) begin
+        if (!resetN) rand_val <= 10'd99;
+        else begin
+            if (rand_val == 10'd999) rand_val <= 10'd99;
+            else rand_val <= rand_val + 1'b1;
+        end
+    end
+    
     logic subtract_flag;
+    logic grant_powerup_flag;
+    assign is_penalty = subtract_flag;
+
     always_comb begin
         subtract_flag = 1'b0;
+        grant_powerup_flag = 1'b0;
         case (pulled_id)
             3'd1: begin 
-                added_score = (100 * pulled_weight * pulled_weight); // Cop penalty
+                added_score = (50 * pulled_weight * pulled_weight); // Cop penalty
                 subtract_flag = 1'b1;
             end
-            3'd2: added_score = (50 * pulled_weight * pulled_weight); // Robber Stand
+            3'd2: added_score = (50 * pulled_weight * pulled_weight); // Robber
             3'd3: added_score = 16'd500;  // Maryjane
-            3'd4: added_score = 16'd1000; // Riddler
+            3'd4: begin // Riddler logic: 50% random score 99-999, 50% powerup pulse
+                if (rand_val[0]) begin
+                    added_score = {6'd0, rand_val};
+                end else begin
+                    added_score = 16'd0;
+                    grant_powerup_flag = 1'b1;
+                end
+            end
             3'd5: added_score = 16'd1000; // Goblin
             default: added_score = 16'd0;
         endcase
@@ -47,7 +69,9 @@ module score_manager (
         if (!resetN) begin
             score <= 0;
             accumulated_web_bonus <= 0;
+            grant_powerup_pulse <= 1'b0;
         end else begin
+            grant_powerup_pulse <= 1'b0; // Default to 0
             if (reset_score_pulse) begin
                 score <= 0;
                 accumulated_web_bonus <= 0;
@@ -59,6 +83,10 @@ module score_manager (
                 
                 // Add regular score + web bomb accumulated score
                 if (score_pulse) begin
+                    if (grant_powerup_flag) begin
+                        grant_powerup_pulse <= 1'b1;
+                    end
+                    
                     if (subtract_flag) begin
                         // If penalty, still add the bonus!
                         score <= (score + accumulated_web_bonus >= added_score) ? 

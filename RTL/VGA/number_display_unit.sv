@@ -6,7 +6,8 @@ module number_display_unit #(
     parameter logic [7:0] DIGIT_COLOR = 8'hFF,
     parameter int START_X = 20,
     parameter int START_Y = 16,
-    parameter bit SCALE_BY_2 = 1'b0
+    parameter bit SCALE_BY_2 = 1'b0,
+    parameter bit SHRINK_BY_2 = 1'b0
 )(
     input  logic        clk,
     input  logic        resetN,
@@ -27,9 +28,9 @@ module number_display_unit #(
     assign digit_vals[3] = (value / 1000) % 10;
     assign digit_vals[4] = (value / 10000) % 10;
 
-    // Define size based on SCALE_BY_2
-    localparam int DIGIT_W = SCALE_BY_2 ? 32 : 16;
-    localparam int DIGIT_H = SCALE_BY_2 ? 64 : 32;
+    // Define size based on SCALE_BY_2/SHRINK_BY_2
+    localparam int DIGIT_W = SCALE_BY_2 ? 32 : (SHRINK_BY_2 ? 8 : 16);
+    localparam int DIGIT_H = SCALE_BY_2 ? 64 : (SHRINK_BY_2 ? 16 : 32);
 
     // Coordinate Math
     logic [2:0] col_idx;
@@ -83,7 +84,8 @@ module number_display_unit #(
 
     NumbersBitMap #(
         .digit_color(DIGIT_COLOR),
-        .SCALE_BY_2(SCALE_BY_2)
+        .SCALE_BY_2(SCALE_BY_2),
+        .SHRINK_BY_2(SHRINK_BY_2)
     ) bitmap_inst (
         .clk(clk),
         .resetN(resetN),

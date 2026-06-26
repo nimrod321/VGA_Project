@@ -27,32 +27,32 @@ module background_controller (
         .q_a(play_bg_rgb)
     );
 
-    // Start Text ROM (512x64 = 32768 words, 1-bit wide)
-    logic [0:0] start_text_bit;
-    logic [14:0] start_text_address;
+    // Lobby Text ROM (320x64 = 20480 words, 1-bit wide)
+    logic [0:0] lobby_text_bit;
+    logic [14:0] lobby_text_address;
     
-    // Position text centered X, 2/3 down Y
-    localparam int START_X = 64;   // (640 - 512) / 2 = 64
-    localparam int START_Y = 320;  // 480 * (2/3) = 320
+    // Position text centered X, and inside the black rectangle in the lobby
+    localparam int START_X = 160;   // (640 - 320) / 2 = 160
+    localparam int START_Y = 246;   // Adjusted to sit slightly beneath the start of the black rectangle (Y=246)
     
-    assign start_text_address = ((pixelY - START_Y) * 512) + (pixelX - START_X);
+    assign lobby_text_address = ((pixelY - START_Y) * 320) + (pixelX - START_X);
     
     altsyncram #(
         .operation_mode("ROM"),
         .width_a(1),
         .widthad_a(15),
-        .numwords_a(32768),
-        .init_file("MIF/start_text.mif"),
+        .numwords_a(20480),
+        .init_file("MIF/lobby_text.mif"),
         .intended_device_family("Cyclone V")
-    ) start_rom_inst (
+    ) lobby_text_rom_inst (
         .clock0(clk),
-        .address_a(start_text_address),
-        .q_a(start_text_bit)
+        .address_a(lobby_text_address),
+        .q_a(lobby_text_bit)
     );
     
-    logic inside_start_text;
-    assign inside_start_text = (current_state == 2'd0) && 
-                         (pixelX >= START_X) && (pixelX < START_X + 512) &&
+    logic inside_lobby_text;
+    assign inside_lobby_text = (current_state == 2'd0) && 
+                         (pixelX >= START_X) && (pixelX < START_X + 320) &&
                          (pixelY >= START_Y) && (pixelY < START_Y + 64);
 
     // Game Over Text ROM (512x64 = 32768 words, 1-bit wide)
@@ -149,8 +149,8 @@ module background_controller (
         if (current_state == 2'd0) begin
             if (show_instructions_en) begin
                 bg_rgb = instructions_bg_rgb;
-            end else if (inside_start_text && start_text_bit == 1'b1) begin
-                bg_rgb = 8'h00; // Black text overlay
+            end else if (inside_lobby_text && lobby_text_bit == 1'b1) begin
+                bg_rgb = 8'hFE; // Near white text overlay
             end else begin
                 bg_rgb = lobby_bg_rgb;
             end

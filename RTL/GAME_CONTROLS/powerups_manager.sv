@@ -32,9 +32,10 @@ module powerups_manager (
     output logic        slowdown_active,
     
     // Powerups Unlocking and Triggering
-    input  logic        score_pulse,
-    input  logic [2:0]  pulled_id,
-    output logic        web_bomb_pulse
+    input  logic        grant_powerup_pulse,
+    output logic        web_bomb_pulse,
+    output logic [1:0]  saved_powerup,
+    output logic [2:0]  slowdown_cooldown_sec
 );
 
 
@@ -67,11 +68,12 @@ module powerups_manager (
     // Forward time_purchased instantly when level starts, since timer manager samples it immediately
     assign passive_extra_time  = start_level_pulse ? time_purchased : active_time;
     assign slowdown_active     = active_slowdown;
+    assign slowdown_cooldown_sec = (slowdown_cooldown + 9'd59) / 60;
 
     // Powerup Tracking
-    logic [1:0] saved_powerup; // 0=None, 1=Slowdown, 2=WebBomb, 3=Scissors
     logic [7:0] random_counter; // Cheap PRNG
     logic       web_bomb_req;
+    logic [8:0] slowdown_cooldown; // 5-second cooldown at 60Hz = 300 frames
 
     always_ff @(posedge clk or negedge resetN) begin
         if (!resetN) begin
@@ -86,6 +88,7 @@ module powerups_manager (
             random_counter  <= 8'd0;
             web_bomb_req    <= 1'b0;
             web_bomb_pulse  <= 1'b0;
+            slowdown_cooldown <= 9'd0;
         end else begin
             add_time_pulse <= 1'b0; // Default pulse to 0
             web_bomb_pulse <= 1'b0;
@@ -102,20 +105,23 @@ module powerups_manager (
                 if (current_state == 2'd1) begin // PLAY state
                     case (keyPad)
                         4'd0: begin // Press 0/ENTER to use saved powerup!
-                            if (saved_powerup == 2'd1 && slowdown_timer == 0 && !active_slowdown) begin
-                                active_slowdown <= 1'b1;
-                                slowdown_timer  <= 6'd60; // 60 frames = 1 second
-                                saved_powerup <= 2'd0;
+                            if (saved_powerup == 2'd1) begin
+                                add_time_pulse  <= 1'b1; // Added Time
+                                saved_powerup   <= 2'd0;
                             end else if (saved_powerup == 2'd2 && !web_bomb_req) begin
-                                web_bomb_req <= 1'b1;
-                                saved_powerup <= 2'd0;
+                                web_bomb_req    <= 1'b1;
+                                saved_powerup   <= 2'd0;
                             end else if (saved_powerup == 2'd3) begin
                                 // Scissors logic goes here later!
-                                saved_powerup <= 2'd0;
+                                saved_powerup   <= 2'd0;
                             end
                         end
-                        4'd8: begin // Press 8 to dynamically add 10 seconds (for testing)
-                            add_time_pulse <= 1'b1;
+                        4'd4: begin // Press 4 to use active slowdown (from store upgrade)
+                            if (active_slowdown_unlocked && slowdown_cooldown == 0 && slowdown_timer == 0 && !active_slowdown) begin
+                                active_slowdown   <= 1'b1;
+                                slowdown_timer    <= 6'd60; // 60 frames = 1 second
+                                slowdown_cooldown <= 9'd300; // 5 seconds cooldown at 60Hz
+                            end
                         end
                         default: ;
                     endcase
@@ -123,8 +129,8 @@ module powerups_manager (
             end
             
             // Riddler Capture Logic -> Gives Random Powerup
-            if (score_pulse && pulled_id == 3'd4 && saved_powerup == 2'd0) begin
-                if (random_counter[1:0] == 2'd0) saved_powerup <= 2'd1; // Slowdown
+            if (grant_powerup_pulse) begin
+                if (random_counter[1:0] == 2'd0) saved_powerup <= 2'd1; // Added Time
                 else if (random_counter[1:0] == 2'd1) saved_powerup <= 2'd2; // Web Bomb
                 else saved_powerup <= 2'd3; // Scissors
             end
@@ -136,7 +142,6 @@ module powerups_manager (
                 active_radius <= radius_purchased;
                 active_time   <= time_purchased;
                 active_slowdown_unlocked <= slowdown_purchased;
-                saved_powerup <= 2'd0; // Reset powerups between levels
             end
             
             // Clear active upgrades when level is not in PLAY state
@@ -147,13 +152,20 @@ module powerups_manager (
                 active_slowdown_unlocked <= 1'b0;
                 active_slowdown <= 1'b0;
                 slowdown_timer  <= 6'd0;
-                saved_powerup   <= 2'd0;
-            end else if (startOfFrame && active_slowdown) begin
-                // Decrement slowdown timer
-                if (slowdown_timer > 0) begin
-                    slowdown_timer <= slowdown_timer - 1'b1;
-                end else begin
-                    active_slowdown <= 1'b0;
+                slowdown_cooldown <= 9'd0;
+            end else begin
+                // Decrement slowdown cooldown on 60Hz tick
+                if (startOfFrame && slowdown_cooldown > 0) begin
+                    slowdown_cooldown <= slowdown_cooldown - 1'b1;
+                end
+                
+                // Decrement active slowdown timer
+                if (startOfFrame && active_slowdown) begin
+                    if (slowdown_timer > 0) begin
+                        slowdown_timer <= slowdown_timer - 1'b1;
+                    end else begin
+                        active_slowdown <= 1'b0;
+                    end
                 end
             end
         end
