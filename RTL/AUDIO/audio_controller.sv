@@ -13,7 +13,8 @@ module audio_controller (
     // Pulse Inputs from Game Events
     input logic       score_pulse,            // Item Grabbed
     input logic       deduct_score_pulse,     // Cha Ching (Store Purchase)
-    input logic       web_bomb_bonus_pulse,   // Explosion
+    input logic       web_bomb_pulse,         // Explosion (Triggers on all detonations)
+    input logic       goblin_bomb_pulse,      // Goblin bomb detonation
     
     // Feedback from melody_player_1
     input logic       melodyEnded,
@@ -57,7 +58,7 @@ module audio_controller (
             startMelodyKey <= 1'b0; // Default to no pulse
             
             // PRIORITY 1: High Priority SFX (One-shots)
-            if (web_bomb_bonus_pulse) begin
+            if (web_bomb_pulse || goblin_bomb_pulse) begin
                 melodySelect <= 4'd8; // Explosion
                 startMelodyKey <= 1'b1;
             end else if (score_pulse) begin
@@ -81,13 +82,13 @@ module audio_controller (
             // Starts exactly when state changes, or when the previous melody finished
             else if (melodyEnded || state_changed) begin
                 if (current_state == 2'd0) begin // Lobby
-                    melodySelect <= 4'd6;
+                    melodySelect <= 4'd1; // Spider-Man Theme
                     startMelodyKey <= 1'b1;
                 end else if (current_state == 2'd2) begin // Store
                     melodySelect <= 4'd4;
                     startMelodyKey <= 1'b1;
-                end else if (current_state == 2'd1 && (current_level == 4'd5 || current_level == 4'd10 || current_level == 4'd15)) begin // Boss Level
-                    melodySelect <= 4'd5;
+                end else if (current_state == 2'd1) begin // Normal Game (includes Boss)
+                    melodySelect <= 4'd15; // Silence track
                     startMelodyKey <= 1'b1;
                 end
                 // Normal gameplay has no looping BGM, allowing SFX to stand out cleanly

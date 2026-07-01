@@ -30,6 +30,7 @@ module SpideyObjectsBitMap #(
     output logic        web_bomb_bonus_pulse,
     output logic signed [15:0] web_bomb_bonus_amount,
     output logic        web_bomb_riddler_pulse, // High when Riddler is caught in Web Bomb explosion
+    output logic        goblin_bomb_pulse,      // High when a goblin bomb detonates
     
     // Outputs to VGA Multiplexer
     output logic        objectsDrawingRequest,  // output that the pixel should be displayed
@@ -110,6 +111,7 @@ module SpideyObjectsBitMap #(
             web_bomb_bonus_pulse <= 1'b0;
             web_bomb_bonus_amount <= 0;
             web_bomb_riddler_pulse <= 1'b0;
+            goblin_bomb_pulse <= 1'b0;
             for (int i=0; i<15; i++) begin
                 obj_active[i] <= 1'b0;
                 obj_dir[i] <= 1'b0;
@@ -371,6 +373,7 @@ module SpideyObjectsBitMap #(
                     end else begin
                         web_bomb_riddler_pulse <= 1'b0;
                         web_bomb_bonus_pulse <= 1'b0;
+                        goblin_bomb_pulse <= 1'b0;
                     end
 
                     // GOBLIN BOMB AND MOVEMENT
@@ -385,6 +388,7 @@ module SpideyObjectsBitMap #(
                             if (bomb_y >= 400) begin
                                 bomb_active <= 1'b0;
                                 explosion_timer <= 30; // 30 frames of explosion
+                                goblin_bomb_pulse <= 1'b1;
                             end
                         end else if (explosion_timer > 0) begin
                             explosion_timer <= explosion_timer - 1;

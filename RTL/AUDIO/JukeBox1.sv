@@ -86,46 +86,63 @@ always_comb begin
        end // case 0 
 
       1:   begin
-  
-			
 			//************************************************************************************************** 
-			// Sheet Music of melody: "Ode to Joy" from Bethoven's 9th symphony   ( up to 32 notes )          *
+			// In-Game Music - Classic 1967 Spider-Man Theme Song
 			//**************************************************************************************************
-				 // First phrase
-				  frq[0]  =  mi  ;      len[0]  = 2  ;   
-				  frq[1]  =  mi  ;      len[1]  = 2  ;   
-				  frq[2]  =  fa  ;      len[2]  = 2  ;   
-				  frq[3]  =  sol ;      len[3]  = 2  ;  
-				  frq[4]  =  sol ;      len[4]  = 2  ;  
-				  frq[5]  =  fa  ;      len[5]  = 2  ;   
-				  frq[6]  =  mi  ;      len[6]  = 2  ;   
-				  frq[7]  =  re  ;      len[7]  = 2  ;   
-				  frq[8]  =  do_ ;      len[8]  = 2  ;   
-				  frq[9]  =  do_ ;      len[9]  = 2  ;   
-				  frq[10] =  re  ;      len[10] = 2  ;  
-				  frq[11] =  mi  ;      len[11] = 2  ;  
-				  frq[12] =  mi  ;      len[12] = 4  ;   
-				  frq[13] =  re  ;      len[13] = 1  ;  
-				  frq[14] =  re  ;      len[14] = 5  ;   
+				  // "Spider-man, Spider-man"
+				  frq[0]  =  re   ;      len[0]  = 2  ;   
+				  frq[1]  =  fa   ;      len[1]  = 2  ;   
+				  frq[2]  =  la   ;      len[2]  = 4  ;   
+				  frq[3]  =  silence;    len[3]  = 2  ;   
+				  frq[4]  =  re   ;      len[4]  = 2  ;   
+				  frq[5]  =  fa   ;      len[5]  = 2  ;   
+				  frq[6]  =  la   ;      len[6]  = 4  ;   
+				  frq[7]  =  silence;    len[7]  = 2  ;   
 				  
-				  // Second phrase (repeat of first with different ending)
-				  frq[15] =  mi  ;      len[15] = 2  ;  
-				  frq[16] =  mi  ;      len[16] = 2  ;  
-				  frq[17] =  fa  ;      len[17] = 2  ;  
-				  frq[18] =  sol ;      len[18] = 2  ; 
-				  frq[19] =  sol ;      len[19] = 2  ; 
-				  frq[20] =  fa  ;      len[20] = 2  ;  
-				  frq[21] =  mi  ;      len[21] = 2  ;  
-				  frq[22] =  re  ;      len[22] = 2  ;  
-				  frq[23] =  do_ ;      len[23] = 2  ; 
-				  frq[24] =  do_ ;      len[24] = 2  ; 
-				  frq[25] =  re  ;      len[25] = 2  ;  
-				  frq[26] =  mi  ;      len[26] = 2  ;  
-				  frq[27] =  re  ;      len[27] = 4  ;  
-				  frq[28] =  do_ ;      len[28] = 1  ; 
-				  frq[29] =  do_ ;      len[29] = 5  ; 
+				  // "Does whatever a spider can"
+				  frq[8]  =  la   ;      len[8]  = 2  ;   
+				  frq[9]  =  la   ;      len[9]  = 2  ;   
+				  frq[10] =  sol  ;      len[10] = 2  ;   
+				  frq[11] =  sol  ;      len[11] = 2  ;   
+				  frq[12] =  fa   ;      len[12] = 2  ;   
+				  frq[13] =  mi   ;      len[13] = 2  ;   
+				  frq[14] =  re   ;      len[14] = 4  ;   
+				  frq[15] =  silence;    len[15] = 2  ;   
 				  
-   				 frq[30] = do_ ;     len[30] = 0 ;    // length = 0 means end of melody
+				  // "Spins a web, any size"
+				  frq[16] =  sol  ;      len[16] = 2  ;   
+				  frq[17] =  laD  ;      len[17] = 2  ;   
+				  frq[18] =  re_H ;      len[18] = 4  ;   
+				  frq[19] =  silence;    len[19] = 2  ;   
+				  frq[20] =  sol  ;      len[20] = 2  ;   
+				  frq[21] =  laD  ;      len[21] = 2  ;   
+				  frq[22] =  re_H ;      len[22] = 4  ;   
+				  frq[23] =  silence;    len[23] = 2  ;   
+				  
+				  // "Catches thieves just like flies"
+				  frq[24] =  re_H ;      len[24] = 2  ;   
+				  frq[25] =  re_H ;      len[25] = 2  ;   
+				  frq[26] =  do_H ;      len[26] = 2  ;   
+				  frq[27] =  do_H ;      len[27] = 2  ;   
+				  frq[28] =  laD  ;      len[28] = 2  ;   
+				  frq[29] =  la   ;      len[29] = 2  ;   
+				  frq[30] =  sol  ;      len[30] = 4  ;   
+				  frq[31] =  silence;    len[31] = 2  ;   
+				  
+				  // "Look out!"
+				  frq[32] =  fa   ;      len[32] = 4  ;   
+				  frq[33] =  la   ;      len[33] = 4  ;   
+				  frq[34] =  silence;    len[34] = 2  ;   
+				  
+				  // "Here comes the Spider-man!"
+				  frq[35] =  re_H ;      len[35] = 2  ;   
+				  frq[36] =  do_H ;      len[36] = 2  ;   
+				  frq[37] =  la   ;      len[37] = 2  ;   
+				  frq[38] =  sol  ;      len[38] = 2  ;   
+				  frq[39] =  fa   ;      len[39] = 2  ;   
+				  frq[40] =  re   ;      len[40] = 8  ;   
+				  
+   				  frq[41] = do_ ;        len[41] = 0 ;    // length = 0 means end of melody
 				
       end // case 1
 	
@@ -172,42 +189,58 @@ always_comb begin
 
       4:   begin		
 			//************************************************************************************************** 
-			// Elevator Music (Store Loop) - Relaxing 4-note loop
+			// Store Music - Mary Had a Little Lamb
 			//**************************************************************************************************			 
-				  frq[0]  =  do_ ;       len[0]  = 4  ;   
-				  frq[1]  =  mi  ;       len[1]  = 4  ;   
-				  frq[2]  =  sol ;       len[2]  = 4  ;   
-				  frq[3]  =  mi  ;       len[3]  = 4  ;   
-				  frq[4]  =  do_ ;       len[4]  = 4  ;   
-				  frq[5]  =  la  ;       len[5]  = 4  ;   
-				  frq[6]  =  sol ;       len[6]  = 8  ;   
-	 			  frq[7]  =  do_ ;       len[7]  = 0  ;    // length = 0 means end of melody
+				  frq[0]  =  mi  ;       len[0]  = 2  ;   
+				  frq[1]  =  re  ;       len[1]  = 2  ;   
+				  frq[2]  =  do_ ;       len[2]  = 2  ;   
+				  frq[3]  =  re  ;       len[3]  = 2  ;   
+				  frq[4]  =  mi  ;       len[4]  = 2  ;   
+				  frq[5]  =  mi  ;       len[5]  = 2  ;   
+				  frq[6]  =  mi  ;       len[6]  = 4  ;   
+				  frq[7]  =  re  ;       len[7]  = 2  ;   
+				  frq[8]  =  re  ;       len[8]  = 2  ;   
+				  frq[9]  =  re  ;       len[9]  = 4  ;   
+				  frq[10] =  mi  ;       len[10] = 2  ;   
+				  frq[11] =  sol ;       len[11] = 2  ;   
+				  frq[12] =  sol ;       len[12] = 4  ;   
+	 			  frq[13] =  do_ ;       len[13] = 0  ;    // length = 0 means end of melody
       end // case 4
 
       5:   begin		
 			//************************************************************************************************** 
-			// Boss Level Music - Fast, intense, threatening loop
+			// Boss Level Music - Deep, dark, Jaws-like loop
 			//**************************************************************************************************			 
-				  frq[0]  =  do_H ;      len[0]  = 2  ;   
-				  frq[1]  =  si   ;      len[1]  = 2  ;   
-				  frq[2]  =  do_H ;      len[2]  = 2  ;   
-				  frq[3]  =  la   ;      len[3]  = 2  ;   
-				  frq[4]  =  sol  ;      len[4]  = 2  ;   
-				  frq[5]  =  faD  ;      len[5]  = 2  ;   
-				  frq[6]  =  sol  ;      len[6]  = 4  ;   
-	 			  frq[7]  =  do_ ;       len[7]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_ ;       len[0]  = 4  ;   
+				  frq[1]  =  doD ;       len[1]  = 4  ;   
+				  frq[2]  =  do_ ;       len[2]  = 4  ;   
+				  frq[3]  =  re  ;       len[3]  = 4  ;   
+				  frq[4]  =  do_ ;       len[4]  = 2  ;   
+				  frq[5]  =  doD ;       len[5]  = 2  ;   
+				  frq[6]  =  re  ;       len[6]  = 2  ;   
+				  frq[7]  =  reD ;       len[7]  = 4  ;   
+	 			  frq[8]  =  do_ ;       len[8]  = 0  ;    // length = 0 means end of melody
       end // case 5
 
       6:   begin		
 			//************************************************************************************************** 
-			// Lobby Music - Upbeat and welcoming loop
+			// Lobby Music - Twinkle Twinkle Little Star
 			//**************************************************************************************************			 
-				  frq[0]  =  do_ ;       len[0]  = 4  ;   
-				  frq[1]  =  re  ;       len[1]  = 2  ;   
-				  frq[2]  =  mi  ;       len[2]  = 2  ;   
-				  frq[3]  =  fa  ;       len[3]  = 4  ;   
-				  frq[4]  =  sol ;       len[4]  = 8  ;   
-	 			  frq[5]  =  do_ ;       len[5]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_ ;       len[0]  = 2  ;   
+				  frq[1]  =  do_ ;       len[1]  = 2  ;   
+				  frq[2]  =  sol ;       len[2]  = 2  ;   
+				  frq[3]  =  sol ;       len[3]  = 2  ;   
+				  frq[4]  =  la  ;       len[4]  = 2  ;   
+				  frq[5]  =  la  ;       len[5]  = 2  ;   
+				  frq[6]  =  sol ;       len[6]  = 4  ;   
+				  frq[7]  =  fa  ;       len[7]  = 2  ;   
+				  frq[8]  =  fa  ;       len[8]  = 2  ;   
+				  frq[9]  =  mi  ;       len[9]  = 2  ;   
+				  frq[10] =  mi  ;       len[10] = 2  ;   
+				  frq[11] =  re  ;       len[11] = 2  ;   
+				  frq[12] =  re  ;       len[12] = 2  ;   
+				  frq[13] =  do_ ;       len[13] = 4  ;   
+	 			  frq[14] =  do_ ;       len[14] = 0 ;    // length = 0 means end of melody
       end // case 6
 
       7:   begin		
@@ -283,31 +316,11 @@ always_comb begin
 
 		
 		default: begin
-				
 			//************************************************************************************************** 
-			// Sheet Music     S O S                                                                           *
+			// Silence Track (Used to stop music)
 			//**************************************************************************************************
-				 // First phrase
-				  frq[0]  =  do_H ;      len[0]  = 2  ;   
-				  frq[1]  =  do_H ;      len[1]  = 2  ;   
-				  frq[2]  =  do_H ;      len[2]  = 2  ; 
-				  
-				  frq[3]  =  silence ;   len[3]  = 3  ;
-				  
-				  frq[4]  =  do_H ;      len[4]  = 4  ;  
-              frq[5]  =  silence ;   len[5]  = 1  ;
-				  frq[6]  =  do_H ;      len[6]  = 4  ;  
-              frq[7]  =  silence ;   len[7]  = 1  ;
-				  frq[8]  =  do_H ;      len[8]  = 4  ;   
-				  
-				  frq[9]  =  silence ;   len[9]  = 3  ;
-				  
-				  frq[10]  =  do_H ;     len[10]  = 2  ;   
-				  frq[11]  =  do_H ;     len[11]  = 2  ;   
-				  frq[12] =  do_H ;      len[12]  = 2  ;   
-
-	 			  frq[13] = do_H ;       len[13] = 0 ;    // length = 0 means end of melod
-	
+				  frq[0]  =  silence;    len[0]  = 1  ;   
+	 			  frq[1]  =  do_ ;       len[1]  = 0  ;    // length = 0 means end of melody
       end
    endcase
   end // always 
