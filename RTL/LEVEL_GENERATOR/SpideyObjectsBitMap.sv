@@ -117,7 +117,7 @@ module SpideyObjectsBitMap #(
         end else if (!play_enable) begin
             state <= INIT_CLEAR;
             objects_placed <= 0;
-            lfsr <= 16'hACE1; // Seed MUST be non-zero
+            lfsr <= {lfsr[14:0], lfsr[15] ^ lfsr[13] ^ lfsr[12] ^ lfsr[10]}; // Let LFSR run in menu for true randomness
             objectsRGB <= TRANSPARENT_ENCODING;
             objectsDrawingRequest <= 1'b0;
             id_code <= 3'd0;
@@ -286,8 +286,8 @@ module SpideyObjectsBitMap #(
                         objects_placed <= objects_placed + 1;
                         state <= INIT_READ_ROM;
                     end else begin
-                        max_x = (t_scale == 2) ? 6'd36 : ((t_scale == 1) ? 6'd38 : 6'd39);
-                        max_y = (t_scale == 2) ? 6'd26 : ((t_scale == 1) ? 6'd28 : 6'd29);
+                        max_x = (t_scale == 2) ? 6'd32 : ((t_scale == 1) ? 6'd36 : 6'd38);
+                        max_y = (t_scale == 2) ? 6'd22 : ((t_scale == 1) ? 6'd26 : 6'd28);
                         
                         // Spawn zones logic
                         if ( ((rand_x <= 16 && rand_y >= 14) || 
@@ -337,8 +337,8 @@ module SpideyObjectsBitMap #(
                             if (obj_active[k]) begin
                                 int size_k;
                                 size_k = (obj_scale[k] == 0) ? 32 : ((obj_scale[k] == 1) ? 64 : 128);
-                                if (obj_x[k] + size_k > hook_x - 64 && obj_x[k] < hook_x + 64 &&
-                                    obj_y[k] + size_k > hook_y - 64 && obj_y[k] < hook_y + 64) begin
+                                if (obj_x[k] + size_k + 64 > hook_x && obj_x[k] < hook_x + 64 &&
+                                    obj_y[k] + size_k + 64 > hook_y && obj_y[k] < hook_y + 64) begin
                                     obj_active[k] <= 1'b0; // Destroy it!
                                     // Sum up the bonus!
                                     case (obj_type[k])
@@ -347,7 +347,13 @@ module SpideyObjectsBitMap #(
                                         end
                                         3'd2: local_bonus = local_bonus + $signed(50 * (obj_scale[k]+1) * (obj_scale[k]+1)); // Robber
                                         3'd3: local_bonus = local_bonus + 16'sd500; // Maryjane
-                                        3'd4: web_bomb_riddler_pulse <= 1'b1;	// Riddler caught -> pulse rewards, 0 score
+                                        3'd4: begin
+                                            if (lfsr[0]) begin
+                                                web_bomb_riddler_pulse <= 1'b1;
+                                            end else begin
+                                                local_bonus = local_bonus + $signed({6'b0, lfsr[9:0]} >= 16'd800 ? 16'd999 : {6'b0, lfsr[9:0]} + 16'd199);
+                                            end
+                                        end
                                         3'd5: local_bonus = local_bonus + 16'sd1000; // Goblin
                                         default: ;
                                     endcase
@@ -362,6 +368,9 @@ module SpideyObjectsBitMap #(
                         web_explosion_timer <= 30;
                         web_explosion_x <= hook_x;
                         web_explosion_y <= hook_y;
+                    end else begin
+                        web_bomb_riddler_pulse <= 1'b0;
+                        web_bomb_bonus_pulse <= 1'b0;
                     end
 
                     // GOBLIN BOMB AND MOVEMENT
@@ -403,10 +412,10 @@ module SpideyObjectsBitMap #(
                                 
                                 // Move Horizontal
                                 if (obj_dir[i] == 1'b0) begin // Right
-                                    obj_x[i] <= obj_x[i] + 2;
+                                    obj_x[i] <= obj_x[i] + ((current_level == 4'd5 || current_level == 4'd10) ? 3'd1 : 3'd2);
                                     if (obj_x[i] >= 640 - 32) obj_dir[i] <= 1'b1; // Bounce left
                                 end else begin // Left
-                                    obj_x[i] <= obj_x[i] - 2;
+                                    obj_x[i] <= obj_x[i] - ((current_level == 4'd5 || current_level == 4'd10) ? 3'd1 : 3'd2);
                                     if (obj_x[i] <= 2) obj_dir[i] <= 1'b0; // Bounce right
                                 end
                                 

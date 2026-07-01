@@ -172,81 +172,113 @@ always_comb begin
 
       4:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note do_                                                *
+			// Elevator Music (Store Loop) - Relaxing 4-note loop
 			//**************************************************************************************************			 
-				  frq[0]  =  do_ ;       len[0]  = 2  ;   
-	 			  frq[1] =   do_ ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_ ;       len[0]  = 4  ;   
+				  frq[1]  =  mi  ;       len[1]  = 4  ;   
+				  frq[2]  =  sol ;       len[2]  = 4  ;   
+				  frq[3]  =  mi  ;       len[3]  = 4  ;   
+				  frq[4]  =  do_ ;       len[4]  = 4  ;   
+				  frq[5]  =  la  ;       len[5]  = 4  ;   
+				  frq[6]  =  sol ;       len[6]  = 8  ;   
+	 			  frq[7]  =  do_ ;       len[7]  = 0  ;    // length = 0 means end of melody
       end // case 4
 
       5:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note re                                                *
+			// Boss Level Music - Fast, intense, threatening loop
 			//**************************************************************************************************			 
-				  frq[0]  =  re  ;       len[0]  = 2  ;   
-	 			  frq[1] =   do_ ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_H ;      len[0]  = 2  ;   
+				  frq[1]  =  si   ;      len[1]  = 2  ;   
+				  frq[2]  =  do_H ;      len[2]  = 2  ;   
+				  frq[3]  =  la   ;      len[3]  = 2  ;   
+				  frq[4]  =  sol  ;      len[4]  = 2  ;   
+				  frq[5]  =  faD  ;      len[5]  = 2  ;   
+				  frq[6]  =  sol  ;      len[6]  = 4  ;   
+	 			  frq[7]  =  do_ ;       len[7]  = 0 ;    // length = 0 means end of melody
       end // case 5
-
 
       6:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note mi                                                *
+			// Lobby Music - Upbeat and welcoming loop
 			//**************************************************************************************************			 
-				  frq[0]  =  mi  ;       len[0]  = 2  ;   
-	 			  frq[1] =   do_ ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_ ;       len[0]  = 4  ;   
+				  frq[1]  =  re  ;       len[1]  = 2  ;   
+				  frq[2]  =  mi  ;       len[2]  = 2  ;   
+				  frq[3]  =  fa  ;       len[3]  = 4  ;   
+				  frq[4]  =  sol ;       len[4]  = 8  ;   
+	 			  frq[5]  =  do_ ;       len[5]  = 0 ;    // length = 0 means end of melody
       end // case 6
-
 
       7:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note fa                                                *
+			// Grab Item SFX - Quick high pitch chime
 			//**************************************************************************************************			 
-				  frq[0]  =  fa  ;       len[0]  = 2  ;   
-	 			  frq[1] =   do_ ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_H ;      len[0]  = 1  ;   
+				  frq[1]  =  mi   ;      len[1]  = 1  ;   
+				  frq[2]  =  sol  ;      len[2]  = 3  ;   
+	 			  frq[3]  =  do_  ;      len[3]  = 0  ;    // length = 0 means end of melody
       end // case 7
-
 
       8:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note sol                                                *
+			// Explosion SFX - Fast dissonant rumble
 			//**************************************************************************************************			 
-				  frq[0]  =  sol ;       len[0]  = 2  ;   
-	 			  frq[1] =   do_ ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_ ;       len[0]  = 1  ;   
+				  frq[1]  =  doD ;       len[1]  = 1  ;   
+				  frq[2]  =  re  ;       len[2]  = 1  ;   
+				  frq[3]  =  do_ ;       len[3]  = 1  ;   
+				  frq[4]  =  reD ;       len[4]  = 1  ;   
+				  frq[5]  =  doD ;       len[5]  = 1  ;   
+				  frq[6]  =  do_ ;       len[6]  = 1  ;   
+				  frq[7]  =  re  ;       len[7]  = 1  ;   
+				  frq[8]  =  do_ ;       len[8]  = 1  ;   
+				  frq[9]  =  doD ;       len[9]  = 1  ;   
+	 			  frq[10] =  do_ ;       len[10] = 0 ;    // length = 0 means end of melody
       end // case 8
-
 
       9:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note la                                                *
+			// Cha Ching SFX (Buy Item) - Very fast high notes
 			//**************************************************************************************************			 
-				  frq[0]  =  la  ;       len[0]  = 2  ;   
-	 			  frq[1] =   do_ ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  si   ;      len[0]  = 1  ;   
+				  frq[1]  =  re_H ;      len[1]  = 1  ;   
+				  frq[2]  =  si   ;      len[2]  = 1  ;   
+				  frq[3]  =  re_H ;      len[3]  = 2  ;   
+	 			  frq[4]  =  do_  ;      len[4]  = 0  ;    // length = 0 means end of melody
       end // case 9
-
 
       10:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note si                                                *
+			// Door Bell SFX (Exit Store) - Bing Bong
 			//**************************************************************************************************			 
-				  frq[0]  =  si  ;       len[0]  = 2  ;   
-	 			  frq[1] =   do_ ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_H ;      len[0]  = 4  ;   
+				  frq[1]  =  sol  ;      len[1]  = 6  ;   
+	 			  frq[2]  =  do_  ;      len[2]  = 0  ;    // length = 0 means end of melody
       end // case 10
-
 
       11:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note do_H                                                *
+			// Level Complete SFX - Triumphant jingle
 			//**************************************************************************************************			 
-				  frq[0]  =  do_H ;      len[0]  = 2  ;   
-	 			  frq[1] =   do_ ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  sol  ;      len[0]  = 2  ;   
+				  frq[1]  =  do_H ;      len[1]  = 2  ;   
+				  frq[2]  =  mi   ;      len[2]  = 2  ;   
+				  frq[3]  =  sol  ;      len[3]  = 4  ;   
+				  frq[4]  =  do_H ;      len[4]  = 6  ;   
+	 			  frq[5]  =  do_  ;      len[5]  = 0  ;    // length = 0 means end of melody
       end // case 11
-
 
       12:   begin		
 			//************************************************************************************************** 
-			// Sheet Music of melody:  Single Note re_H                                                *
+			// Game Over SFX - Sad descending tones
 			//**************************************************************************************************			 
-				  frq[0]  =  re_H ;       len[0]  = 2  ;   
-	 			  frq[1] =   do_  ;       len[1]  = 0 ;    // length = 0 means end of melody
+				  frq[0]  =  do_H ;      len[0]  = 4  ;   
+				  frq[1]  =  la   ;      len[1]  = 4  ;   
+				  frq[2]  =  fa   ;      len[2]  = 4  ;   
+				  frq[3]  =  re   ;      len[3]  = 4  ;   
+				  frq[4]  =  do_  ;      len[4]  = 8  ;   
+	 			  frq[5]  =  do_  ;      len[5]  = 0  ;    // length = 0 means end of melody
       end // case 12
 
 		

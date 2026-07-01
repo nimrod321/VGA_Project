@@ -24,14 +24,18 @@ module score_manager (
     output logic        is_penalty
 );
 
-    assign threshold = 550 + (current_level * 500);
+    threshold_rom t_rom_inst (
+        .current_level(current_level),
+        .threshold(threshold)
+    );
+    
     assign threshold_met = (score >= threshold);
     
     logic [9:0] rand_val;
     always_ff @(posedge clk or negedge resetN) begin
-        if (!resetN) rand_val <= 10'd99;
+        if (!resetN) rand_val <= 10'd199;
         else begin
-            if (rand_val == 10'd999) rand_val <= 10'd99;
+            if (rand_val >= 10'd999) rand_val <= 10'd199;
             else rand_val <= rand_val + 1'b1;
         end
     end
@@ -50,9 +54,10 @@ module score_manager (
             end
             3'd2: base_added_score = (50 * pulled_weight * pulled_weight); // Robber
             3'd3: base_added_score = 16'd500;  // Maryjane
-            3'd4: begin // Riddler logic: 25% random score 99-999, 75% powerup pulse
-                if (rand_val[1:0] == 2'd0) begin
-                    base_added_score = {6'd0, rand_val};
+            3'd4: begin // Riddler logic: 50% powerup pulse, 50% random score
+                if (rand_val[0]) begin
+                    base_added_score = {6'b0, rand_val};
+                    grant_powerup_flag = 1'b0;
                 end else begin
                     base_added_score = 16'd0;
                     grant_powerup_flag = 1'b1;

@@ -73,7 +73,7 @@ module hud_drawer (
     logic        score_draw;
     logic [7:0]  score_rgb;
     number_display_unit #(
-        .NUM_DIGITS(4),
+        .NUM_DIGITS(5),
         .DIGIT_COLOR(8'h1F), // Cyan
         .START_X(20),
         .START_Y(16),
@@ -93,7 +93,7 @@ module hud_drawer (
     logic        goal_draw;
     logic [7:0]  goal_rgb;
     number_display_unit #(
-        .NUM_DIGITS(4),
+        .NUM_DIGITS(5),
         .DIGIT_COLOR(8'h1F), // Cyan
         .START_X(20),
         .START_Y(56),       // 16 + 32 + 8 gap
@@ -196,7 +196,7 @@ module hud_drawer (
     // -------------------------------------------------------------------------
     // 2b. HUD Inventory Icon ROMs & Display Logic (Top Left Offset, X=250, Y=16)
     // -------------------------------------------------------------------------
-    logic [7:0] q_clock, q_web, q_scissors;
+    logic [7:0] q_clock, q_bomb, q_scissors;
     logic [9:0] icon_addr;
     
     // Address mapping for 32x32 icon centered at X=250, Y=16
@@ -205,8 +205,8 @@ module hud_drawer (
     altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_clock_32x32.mif"), .intended_device_family("Cyclone V"))
         rom_hud_clock (.clock0(clk), .address_a(icon_addr), .q_a(q_clock));
 
-    altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_web_32x32.mif"), .intended_device_family("Cyclone V"))
-        rom_hud_web (.clock0(clk), .address_a(icon_addr), .q_a(q_web));
+    altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_bomb_32x32.mif"), .intended_device_family("Cyclone V"))
+        rom_hud_bomb (.clock0(clk), .address_a(icon_addr), .q_a(q_bomb));
 
     altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_scissors_32x32.mif"), .intended_device_family("Cyclone V"))
         rom_hud_scissors (.clock0(clk), .address_a(icon_addr), .q_a(q_scissors));
@@ -215,7 +215,7 @@ module hud_drawer (
     always_comb begin
         case (saved_powerup)
             2'd1:    active_icon_rgb = q_clock;
-            2'd2:    active_icon_rgb = q_web;
+            2'd2:    active_icon_rgb = q_bomb;
             2'd3:    active_icon_rgb = q_scissors;
             default: active_icon_rgb = 8'h00;
         endcase

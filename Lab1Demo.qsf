@@ -39,7 +39,6 @@
 
 set_global_assignment -name FAMILY "Cyclone V"
 set_global_assignment -name DEVICE 5CSXFC6D6F31C6
-set_global_assignment -name TOP_LEVEL_ENTITY TOP_VGA_DEMO_KBD
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 17.0.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:51:54  JULY 08, 2018"
 set_global_assignment -name LAST_QUARTUS_VERSION "17.0.0 Lite Edition"
@@ -239,6 +238,11 @@ set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name SYSTEMVERILOG_FILE RTL/VGA/game_controller.sv
+set_global_assignment -name SYSTEMVERILOG_FILE RTL/VGA/game_state_controller.sv
+set_global_assignment -name SYSTEMVERILOG_FILE RTL/VGA/score_manager.sv
+set_global_assignment -name SYSTEMVERILOG_FILE RTL/VGA/timer_manager.sv
+set_global_assignment -name TOP_LEVEL_ENTITY TOP_VGA_DEMO_KBD
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/GAME_CONTROLS/store_logic.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/GAME_CONTROLS/store_drawer.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/VGA/background_controller.sv
@@ -270,6 +274,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE RTL/Seg7/SEG7.SV
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/AUDIO/Mili_sec_counter.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/AUDIO/melody_player_1.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/AUDIO/JukeBox1.sv
+set_global_assignment -name SYSTEMVERILOG_FILE RTL/AUDIO/audio_controller.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/AUDIO/SinTable.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/AUDIO/addr_counter.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/AUDIO/prescaler.sv
@@ -292,5 +297,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE RTL/HOOK_MOTION/hook_motion_contr
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/HOOK_MOTION/hook_system.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/HOOK_MOTION/spider_web_object.sv
 set_global_assignment -name SYSTEMVERILOG_FILE RTL/HOOK_MOTION/pulled_object.sv
+set_global_assignment -name SYSTEMVERILOG_FILE RTL/GAME_CONTROLS/threshold_rom.sv
 set_global_assignment -name SLD_FILE db/stp1_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -81,7 +81,7 @@ module store_drawer (
     altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_web_32x32.mif"), .intended_device_family("Cyclone V"))
         rom_icon_radius (.clock0(clk), .address_a(icon_radius_addr), .q_a(icon_radius_rgb));
         
-    altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_scissors_32x32.mif"), .intended_device_family("Cyclone V"))
+    altsyncram #(.operation_mode("ROM"), .width_a(8), .widthad_a(10), .numwords_a(1024), .init_file("MIF/icon_slowdown_32x32.mif"), .intended_device_family("Cyclone V"))
         rom_icon_slow (.clock0(clk), .address_a(icon_slow_addr), .q_a(icon_slow_rgb));
         
     logic draw_icon_speed, draw_icon_time, draw_icon_radius, draw_icon_slow;
